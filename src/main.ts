@@ -10,6 +10,7 @@ async function createApp(): Promise<Express> {
   if (cachedApp) {
     return cachedApp;
   }
+  alert('createApp');
 
   const expressApp = express();
   const adapter = new ExpressAdapter(expressApp);
