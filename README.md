@@ -57,18 +57,63 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```bash
+# 환경 설정
+NODE_ENV=development
+
+# 서버 포트
+PORT=3000
+
+# 데이터베이스 설정 (필요시 추가)
+# DATABASE_URL=postgresql://username:password@localhost:5432/byzip_db
+
+# JWT 설정 (필요시 추가)
+# JWT_SECRET=your_jwt_secret_key
+# JWT_EXPIRES_IN=7d
+
+# 외부 API 키들 (필요시 추가)
+# SOME_API_KEY=your_api_key
+```
+
+## Vercel Deployment
+
+이 프로젝트는 Vercel에 배포되도록 구성되어 있습니다:
+
+### 환경별 도메인:
+
+- **개발환경**: `dev-api.by-zip.com`
+- **프로덕션**: `api.by-zip.com`
+
+### Vercel 환경변수 설정:
+
+#### 개발환경 (dev-api.by-zip.com):
+
+```
+NODE_ENV=development
+PORT=3000
+```
+
+#### 프로덕션 (api.by-zip.com):
+
+```
+NODE_ENV=production
+PORT=3000
+```
+
+### 배포 과정:
+
+1. Vercel 대시보드에서 프로젝트 생성
+2. GitHub 리포지토리 연결
+3. 환경변수 설정 (Settings > Environment Variables)
+4. 커스텀 도메인 설정 (Settings > Domains)
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
 ## Resources
 
