@@ -1,17 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { getPort } from 'get-port-please';
 
-async function bootstrap(): Promise<void> {
-  if (process.env.NODE_ENV !== 'production') {
-    const app = await NestFactory.create(AppModule);
-    const port = process.env.PORT ?? 3000;
-    await app.listen(port);
-
-    console.log(`🚀 Server running on port ${port}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV ?? 'development'}`);
-  }
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const port = await getPort({ portRange: [3000, 3001] });
+  await app.listen(port, async (...args) => {
+    console.log(`Server is running on ${await app.getUrl()}`);
+  });
 }
-bootstrap().catch((error) => {
-  console.error('❌ Error starting the application:', error);
-  process.exit(1);
-});
+bootstrap();
