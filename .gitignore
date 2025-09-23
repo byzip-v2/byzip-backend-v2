@@ -78,3 +78,7 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# 개인 환경변수 파일 (git에 포함하지 않음)
+.env.local
+.env*.local
