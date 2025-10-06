@@ -1,60 +1,33 @@
-import { Body, Controller, Headers, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import {
-  ApiBasicAuth,
-  ApiBody,
-  ApiOperation,
-  ApiResponse,
-} from '@nestjs/swagger';
-import * as authDto from '../types/dto/auth/auth.dto';
+  DeleteUserRequestDto,
+  DeleteUserResponseDto,
+  LoginRequestDto,
+  LoginResponseDto,
+  RegisterRequestDto,
+  RegisterResponseDto,
+} from '../types/dto/auth/auth.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // @Post('token/access')
-  // tokenAccess(@Headers('Authorization') rowToken: string) {
-  //   const token = this.authService.extractTokenFromHeader(rowToken, true);
-  //   const newToken = this.authService.rotateToken(token, false);
-  //   return { accessToken: newToken };
-  // }
-
-  // @Post('token/refresh')
-  // tokenRefresh(@Headers('Authorization') rowToken: string) {
-  //   const token = this.authService.extractTokenFromHeader(rowToken, true);
-  //   const newToken = this.authService.rotateToken(token, true);
-  //   return { refreshToken: newToken };
-  // }
-
   @Post('login')
   @ApiOperation({
     summary: '로그인',
     description: '로그인 성공시 엑세스토큰과  리프레시 토큰을 반환합니다.',
   })
-  // @ApiHeader({ name: 'Authorization', description: 'Basic 토큰' })
-  @ApiBasicAuth()
+  @ApiBody({ type: LoginRequestDto })
   @ApiResponse({
     status: 201,
     description: '로그인 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        accessToken: {
-          type: 'string',
-          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        },
-        refreshToken: {
-          type: 'string',
-          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        },
-      },
-    },
+    type: LoginResponseDto,
   })
   @ApiResponse({ status: 401, description: '로그인에 실패하였습니다' })
-  login(@Headers('Authorization') rowToken: string) {
-    const token = this.authService.extractTokenFromHeader(rowToken, false);
-    const credentials = this.authService.decodeBasicToken(token);
-    return this.authService.loginWithUserId(credentials);
+  login(@Body() loginData: LoginRequestDto): Promise<LoginResponseDto> {
+    return this.authService.loginWithUserId(loginData);
   }
 
   @Post('register')
@@ -62,53 +35,41 @@ export class AuthController {
     summary: '회원가입',
     description: '새로운 사용자를 등록합니다.',
   })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        userId: {
-          type: 'string',
-          description: '사용자 ID (로그인용)',
-          example: 'user123',
-        },
-        name: {
-          type: 'string',
-          description: '사용자 이름',
-          example: '홍길동',
-        },
-        email: {
-          type: 'string',
-          description: '이메일',
-          example: 'user@example.com',
-        },
-        password: {
-          type: 'string',
-          description: '비밀번호',
-          example: 'password123!',
-        },
-        confirmPassword: {
-          type: 'string',
-          description: '비밀번호 확인',
-          example: 'password123!',
-        },
-        phoneNumber: {
-          type: 'string',
-          description: '전화번호 (선택)',
-          example: '010-1234-5678',
-        },
-      },
-      required: ['userId', 'name', 'email', 'password', 'confirmPassword'],
-    },
-  })
+  @ApiBody({ type: RegisterRequestDto })
   @ApiResponse({
     status: 201,
     description: '회원가입 성공',
+    type: RegisterResponseDto,
   })
   @ApiResponse({
     status: 400,
     description: '잘못된 요청 데이터',
   })
-  register(@Body() user: authDto.RegisterRequestDto) {
+  register(@Body() user: RegisterRequestDto): Promise<RegisterResponseDto> {
     return this.authService.registerUser(user);
+  }
+
+  @Post('delete')
+  @ApiOperation({
+    summary: '사용자 삭제',
+    description: 'userId와 password를 확인한 후 해당 사용자를 삭제합니다.',
+  })
+  @ApiBody({ type: DeleteUserRequestDto })
+  @ApiResponse({
+    status: 201,
+    description: '사용자 삭제 성공',
+    type: DeleteUserResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 실패 또는 사용자를 찾을 수 없음',
+  })
+  async deleteUser(
+    @Body() deleteData: DeleteUserRequestDto,
+  ): Promise<DeleteUserResponseDto> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    return (await this.authService.deleteUser(
+      deleteData,
+    )) as DeleteUserResponseDto;
   }
 }

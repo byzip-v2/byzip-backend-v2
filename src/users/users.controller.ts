@@ -7,12 +7,22 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import { ApiHeader, ApiOperation, ApiParam } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtGuard } from '../auth/guards/jwt.guard';
+import {
+  GetAllUsersResponseDto,
+  GetMeResponseDto,
+  UpdateUserRequestDto,
+  UpdateUserResponseDto,
+} from '../types/dto/user/user.dto';
 import { UsersModel } from './entities/users.entity';
 import { UsersService } from './users.service';
-import { UsersModelDto } from '../types/dto/user/user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -23,17 +33,31 @@ export class UsersController {
     summary: '로그인한 유저 정보 조회',
     description: '로그인한 유저 정보를 조회합니다.',
   })
-  @ApiHeader({ name: 'Authorization', description: 'Bearer 토큰' })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 프로필 조회 성공',
+    type: GetMeResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증되지 않은 사용자',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '사용자 프로필을 찾을 수 없음',
+  })
+  @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtGuard)
   async getMyProfile(
     @CurrentUser() user: UsersModel,
-  ): Promise<Omit<UsersModel, 'password'>> {
+  ): Promise<GetMeResponseDto> {
     try {
       const profile = await this.usersService.getMyProfile(user.userId);
       if (!profile) {
         throw new NotFoundException('사용자 프로필을 찾을 수 없습니다.');
       }
-      return profile;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      return profile as GetMeResponseDto;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -44,41 +68,58 @@ export class UsersController {
 
   @Get()
   @ApiOperation({
-    summary: '유저 정보 조회',
-    description: '유저 정보를 조회합니다.',
+    summary: '전체 유저 정보 조회',
+    description: '모든 유저의 기본 정보를 조회합니다. (비밀번호 제외)',
   })
-  async findAll(): Promise<UsersModel[]> {
-    return await this.usersService.findAll();
+  @ApiResponse({
+    status: 200,
+    description: '유저 목록 조회 성공',
+    type: [GetAllUsersResponseDto],
+  })
+  async findAll(): Promise<GetAllUsersResponseDto[]> {
+    const users = await this.usersService.findAll();
+    return users.map((user) => ({
+      id: user.id,
+      userId: user.userId,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      profileImageUrl: user.profileImageUrl,
+      createdAt: user.createdAt,
+      status: user.status,
+      role: user.role,
+      emailVerified: user.emailVerified,
+    }));
   }
-
-  // @Get(':id')
-  // async findOne(@Param('id') id: number): Promise<UsersModel | null> {
-  //   return await this.usersService.findOne(id);
-  // }
-
-  // @Get('userId/:userId')
-  // async findByUserId(
-  //   @Param('userId') userId: string,
-  // ): Promise<UsersModel | null> {
-  //   return await this.usersService.findByUserId(userId);
-  // }
 
   @Patch(':id')
   @ApiOperation({
     summary: '유저 정보 수정',
-    description: '유저 정보를 수정합니다.',
+    description: '특정 유저의 정보를 수정합니다.',
   })
-  @ApiParam({ name: 'id', description: '유저 고유 ID' })
+  @ApiParam({ name: 'id', description: '유저 고유 ID', type: 'number' })
+  @ApiResponse({
+    status: 200,
+    description: '유저 정보 수정 성공',
+    type: UpdateUserResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '유저를 찾을 수 없음',
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 데이터',
+  })
   async update(
     @Param('id') id: number,
-    @Body() userData: Partial<UsersModelDto>,
-  ): Promise<UsersModel | null> {
-    return await this.usersService.update(id, userData);
+    @Body() userData: UpdateUserRequestDto,
+  ): Promise<UpdateUserResponseDto> {
+    const updatedUser = await this.usersService.update(id, userData);
+    if (!updatedUser) {
+      throw new NotFoundException('유저를 찾을 수 없습니다.');
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return updatedUser as UpdateUserResponseDto;
   }
-
-  // @Delete(':id')
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async remove(@Param('id') id: number): Promise<void> {
-  //   return await this.usersService.remove(id);
-  // }
 }

@@ -2,7 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { RegisterRequestDto } from '../types/dto/auth/auth.dto';
+import {
+  DeleteUserRequestDto,
+  DeleteUserResponseDto,
+  LoginResponseDto,
+  RegisterRequestDto,
+  RegisterResponseDto,
+  TokenDataDto,
+} from '../types/dto/auth/auth.dto';
 import { JwtPayload } from '../types/jwt.types';
 import { UsersModel } from '../users/entities/users.entity';
 import { UsersService } from '../users/users.service';
@@ -39,10 +46,15 @@ export class AuthService {
   }
 
   // 엑세스토큰과 리프레시토큰을 반환하는 로직
-  loginUser(user: Pick<UsersModel, 'userId'>) {
+  loginUser(user: Pick<UsersModel, 'userId'>): LoginResponseDto {
     const accessToken = this.signToken(user, false);
     const refreshToken = this.signToken(user, true);
-    return { accessToken, refreshToken };
+    const tokenData: TokenDataDto = { accessToken, refreshToken };
+    return {
+      success: true,
+      message: '로그인이 성공적으로 처리되었습니다.',
+      data: tokenData,
+    };
   }
 
   async authenticateWithUserIdAndPassword(
@@ -72,12 +84,14 @@ export class AuthService {
     return existingUser;
   }
 
-  async loginWithUserId(user: Pick<UsersModel, 'userId' | 'password'>) {
+  async loginWithUserId(
+    user: Pick<UsersModel, 'userId' | 'password'>,
+  ): Promise<LoginResponseDto> {
     const existingUser = await this.authenticateWithUserIdAndPassword(user);
     return this.loginUser(existingUser);
   }
 
-  async registerUser(user: RegisterRequestDto) {
+  async registerUser(user: RegisterRequestDto): Promise<RegisterResponseDto> {
     // 입력 데이터 유효성 검사
     if (!user.password || typeof user.password !== 'string') {
       throw new UnauthorizedException('유효한 비밀번호를 입력해주세요.');
@@ -98,8 +112,36 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    // 로그인 토큰 반환
-    return this.loginUser({ userId: newUser.userId });
+    // 회원가입 성공 후 토큰 반환
+    const accessToken = this.signToken({ userId: newUser.userId }, false);
+    const refreshToken = this.signToken({ userId: newUser.userId }, true);
+    const tokenData: TokenDataDto = { accessToken, refreshToken };
+    return {
+      success: true,
+      message: '회원가입이 성공적으로 처리되었습니다.',
+      data: tokenData,
+    };
+  }
+
+  async deleteUser(
+    deleteData: DeleteUserRequestDto,
+  ): Promise<DeleteUserResponseDto> {
+    // 1. 사용자 인증 (userId와 password 확인)
+    await this.authenticateWithUserIdAndPassword(deleteData);
+
+    // 2. 사용자 삭제
+    const isDeleted = await this.usersService.removeByUserId(deleteData.userId);
+
+    if (!isDeleted) {
+      throw new UnauthorizedException('사용자 삭제에 실패했습니다.');
+    }
+
+    // 3. 성공 응답 반환
+    return {
+      success: true,
+      message: '사용자가 성공적으로 삭제되었습니다.',
+      data: { userId: deleteData.userId },
+    };
   }
 
   extractTokenFromHeader(header: string, isBearer: boolean): string {
@@ -112,15 +154,6 @@ export class AuthService {
       const token = splitToken[1];
       return token;
     }
-  }
-
-  decodeBasicToken(base64String: string): { userId: string; password: string } {
-    const decodedToken = Buffer.from(base64String, 'base64').toString('utf-8');
-    const [userId, password] = decodedToken.split(':');
-    if (!userId || !password) {
-      throw new UnauthorizedException('유효하지 않은 토큰입니다.');
-    }
-    return { userId, password };
   }
 
   private isValidJwtPayload(payload: unknown): payload is JwtPayload {

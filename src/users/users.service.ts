@@ -5,9 +5,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import type { RegisterRequestDto } from '../types/dto/auth/auth.dto';
 import type { UsersModelDto } from '../types/dto/user/user.dto';
-import { Repository } from 'typeorm';
 import { UsersModel } from './entities/users.entity';
 
 @Injectable()
@@ -115,6 +115,11 @@ export class UsersService {
 
   async remove(id: number): Promise<void> {
     await this.usersRepository.delete(id);
+  }
+
+  async removeByUserId(userId: string): Promise<boolean> {
+    const result = await this.usersRepository.delete({ userId });
+    return (result.affected ?? 0) > 0;
   }
 
   // 현재 사용자 프로필 조회 (비밀번호 제외)
