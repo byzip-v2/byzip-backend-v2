@@ -1,22 +1,16 @@
 import { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ExpressAdapter } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import express, { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { AppModule } from '../src/app.module';
 
-const expressServer = express();
 let app: INestApplication;
 
-async function createNestServer(): Promise<express.Express> {
+async function bootstrap(): Promise<INestApplication> {
   if (!app) {
-    app = await NestFactory.create(
-      AppModule,
-      new ExpressAdapter(expressServer),
-      {
-        logger: ['error', 'warn', 'log'],
-      },
-    );
+    app = await NestFactory.create(AppModule, {
+      logger: ['error', 'warn', 'log'],
+    });
 
     // CORS 설정
     app.enableCors({
@@ -35,11 +29,15 @@ async function createNestServer(): Promise<express.Express> {
 
     await app.init();
   }
-
-  return expressServer;
+  return app;
 }
 
 export default async (req: Request, res: Response): Promise<void> => {
-  const server = await createNestServer();
-  server(req, res);
+  const nestApp = await bootstrap();
+  const httpAdapter = nestApp.getHttpAdapter();
+  const instance = httpAdapter.getInstance() as (
+    req: Request,
+    res: Response,
+  ) => void;
+  instance(req, res);
 };
