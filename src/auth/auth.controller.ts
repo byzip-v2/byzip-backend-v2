@@ -9,11 +9,13 @@ import {
   RegisterResponseDto,
 } from '../types/dto/auth/auth.dto';
 import { AuthService } from './auth.service';
+import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('login')
   @ApiOperation({
     summary: '로그인',
@@ -30,6 +32,7 @@ export class AuthController {
     return this.authService.loginWithUserId(loginData);
   }
 
+  @Public()
   @Post('register')
   @ApiOperation({
     summary: '회원가입',
@@ -67,9 +70,6 @@ export class AuthController {
   async deleteUser(
     @Body() deleteData: DeleteUserRequestDto,
   ): Promise<DeleteUserResponseDto> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    return (await this.authService.deleteUser(
-      deleteData,
-    )) as DeleteUserResponseDto;
+    return await this.authService.deleteUser(deleteData);
   }
 }

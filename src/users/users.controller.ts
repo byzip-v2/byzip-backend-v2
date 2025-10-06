@@ -5,7 +5,6 @@ import {
   NotFoundException,
   Param,
   Patch,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -14,7 +13,6 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { JwtGuard } from '../auth/guards/jwt.guard';
 import {
   GetAllUsersResponseDto,
   GetMeResponseDto,
@@ -47,7 +45,6 @@ export class UsersController {
     description: '사용자 프로필을 찾을 수 없음',
   })
   @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtGuard)
   async getMyProfile(
     @CurrentUser() user: UsersModel,
   ): Promise<GetMeResponseDto> {
@@ -56,7 +53,6 @@ export class UsersController {
       if (!profile) {
         throw new NotFoundException('사용자 프로필을 찾을 수 없습니다.');
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       return profile as GetMeResponseDto;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -119,7 +115,6 @@ export class UsersController {
     if (!updatedUser) {
       throw new NotFoundException('유저를 찾을 수 없습니다.');
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return updatedUser as UpdateUserResponseDto;
   }
 }

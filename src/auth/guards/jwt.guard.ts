@@ -4,25 +4,38 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { JwtPayload } from '../../types/jwt.types';
-import { AuthService } from '../auth.service';
 import { UsersService } from '../../users/users.service';
+import { AuthService } from '../auth.service';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class JwtGuard implements CanActivate {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
+    private readonly reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Public 데코레이터가 있는 엔드포인트는 인증을 건너뜀
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest<Request>();
 
     // Authorization 헤더에서 토큰 추출
     const authorization = request.headers.authorization;
     if (!authorization) {
-      throw new UnauthorizedException('Authorization 헤더가 필요합니다.');
+      throw new UnauthorizedException('토큰이 필요합니다.');
     }
 
     try {
