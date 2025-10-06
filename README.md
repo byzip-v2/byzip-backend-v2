@@ -90,19 +90,38 @@ PORT=3000
 
 ### Vercel 환경변수 설정:
 
+Vercel 대시보드에서 다음 환경 변수들을 설정해주세요:
+
+#### 필수 환경변수:
+
+```
+NODE_ENV=production
+DATABASE_URL=postgresql://username:password@hostname:port/database_name
+JWT_SECRET=your-super-secret-jwt-key-here
+JWT_EXPIRES_IN=7d
+```
+
 #### 개발환경 (dev-api.by-zip.com):
 
 ```
 NODE_ENV=development
-PORT=3000
+DATABASE_URL=your_dev_database_url
+JWT_SECRET=your_dev_jwt_secret
 ```
 
 #### 프로덕션 (api.by-zip.com):
 
 ```
 NODE_ENV=production
-PORT=3000
+DATABASE_URL=your_prod_database_url
+JWT_SECRET=your_prod_jwt_secret
 ```
+
+**⚠️ 중요**:
+
+- `DATABASE_URL`은 Neon 또는 다른 PostgreSQL 데이터베이스 연결 URL이어야 합니다
+- `JWT_SECRET`은 충분히 복잡한 문자열로 설정해주세요
+- 환경 변수가 설정되지 않으면 서버리스 함수가 크래시될 수 있습니다
 
 ### 배포 과정:
 
