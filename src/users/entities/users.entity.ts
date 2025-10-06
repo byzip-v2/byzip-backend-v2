@@ -1,16 +1,16 @@
 import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import {
   UsersGenderEnum,
   UsersModelDto,
   UsersRolesEnum,
   UsersStatusEnum,
 } from '../../types/dto/user/user.dto';
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
 
 @Entity('users')
 export class UsersModel implements UsersModelDto {

@@ -1,28 +1,18 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "dist/main.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "dist/main.js"
-    }
-  ],
   "functions": {
-    "dist/main.js": {
+    "api/index.ts": {
       "maxDuration": 30,
       "memory": 1024
     }
   },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "outputDirectory": "dist"
+  }
 }
