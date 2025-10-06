@@ -1,0 +1,18 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": true,
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.preferences.importModuleSpecifierEnding": "minimal",
+  "typescript.suggest.includeAutomaticOptionalChainCompletions": true,
+  "typescript.suggest.includeCompletionsForImportStatements": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true,
+    "**/.DS_Store": true
+  }
+}

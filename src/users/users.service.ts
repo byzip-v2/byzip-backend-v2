@@ -5,8 +5,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { RegisterRequestDto } from 'src/types/dto/auth/auth.dto';
-import type { UsersModelDto } from 'src/types/dto/user/user.dto';
+import type { RegisterRequestDto } from '../types/dto/auth/auth.dto';
+import type { UsersModelDto } from '../types/dto/user/user.dto';
 import { Repository } from 'typeorm';
 import { UsersModel } from './entities/users.entity';
 

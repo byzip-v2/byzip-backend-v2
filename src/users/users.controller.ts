@@ -8,11 +8,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiParam } from '@nestjs/swagger';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { JwtGuard } from 'src/auth/guards/jwt.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtGuard } from '../auth/guards/jwt.guard';
 import { UsersModel } from './entities/users.entity';
 import { UsersService } from './users.service';
-import { UsersModelDto } from 'src/types/dto/user/user.dto';
+import { UsersModelDto } from '../types/dto/user/user.dto';
 
 @Controller('users')
 export class UsersController {

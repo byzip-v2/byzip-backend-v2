@@ -5,7 +5,7 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-import * as authDto from 'src/types/dto/auth/auth.dto';
+import * as authDto from '../types/dto/auth/auth.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')

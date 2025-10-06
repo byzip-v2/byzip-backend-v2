@@ -3,7 +3,7 @@ import {
   UsersModelDto,
   UsersRolesEnum,
   UsersStatusEnum,
-} from 'src/types/dto/user/user.dto';
+} from '../../types/dto/user/user.dto';
 import {
   Entity,
   Column,
