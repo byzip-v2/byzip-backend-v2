@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { AppModule } from '../src/app.module';
 
 const expressServer = express();
@@ -39,7 +39,7 @@ async function createNestServer(): Promise<express.Express> {
   return expressServer;
 }
 
-export default async (req: any, res: any) => {
+export default async (req: Request, res: Response): Promise<void> => {
   const server = await createNestServer();
-  return server(req, res);
+  server(req, res);
 };
