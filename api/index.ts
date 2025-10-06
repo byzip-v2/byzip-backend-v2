@@ -25,7 +25,16 @@ async function bootstrap(): Promise<INestApplication> {
       .setVersion('2.0.0')
       .build();
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+    SwaggerModule.setup('api', app, document, {
+      swaggerOptions: {
+        url: '/api-json',
+      },
+      customCssUrl: 'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css',
+      customJs: [
+        'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js',
+        'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js',
+      ],
+    });
 
     await app.init();
   }
