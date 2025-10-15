@@ -19,9 +19,9 @@ async function bootstrap(): Promise<INestApplication> {
       credentials: true,
     });
 
-    // API 문서 접근 제한을 위한 기본 인증 설정
+    // API 문서 접근 제한을 위한 기본 인증 설정 (Swagger 문서에만 적용)
     app.use(
-      '/api',
+      ['/docs', '/docs-json'],
       basicAuth({
         challenge: true,
         users: {
@@ -48,9 +48,9 @@ async function bootstrap(): Promise<INestApplication> {
       )
       .build();
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document, {
+    SwaggerModule.setup('docs', app, document, {
       swaggerOptions: {
-        url: '/api-json',
+        url: '/docs-json',
       },
       customCssUrl: 'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css',
       customJs: [

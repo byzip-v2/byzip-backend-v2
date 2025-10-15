@@ -12,9 +12,9 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
-  // API 문서 접근 제한을 위한 기본 인증 설정
+  // API 문서 접근 제한을 위한 기본 인증 설정 (Swagger 문서에만 적용)
   app.use(
-    '/api',
+    ['/docs', '/docs-json'],
     basicAuth({
       challenge: true,
       users: {
@@ -40,7 +40,7 @@ async function bootstrap(): Promise<void> {
     )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  SwaggerModule.setup('docs', app, documentFactory);
 
   await app.listen(PORT, () =>
     console.log(`Server is running on port ${PORT}`),
