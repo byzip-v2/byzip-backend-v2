@@ -1,0 +1,27 @@
+{
+  "name": "byzip-v2-sdk",
+  "version": "1.0.2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "byzip",
+    "byzip-v2-sdk",
+    "typescript",
+    "dto",
+    "types"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "분양모음집 V2 SDK - 프론트엔드와 백엔드 간 타입 통일을 위한 TypeScript SDK",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

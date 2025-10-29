@@ -1,0 +1,70 @@
+name: Publish SDK to NPM
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - 'src/types/**'
+      - 'scripts/extract-types.sh'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout 코드
+        uses: actions/checkout@v4
+
+      - name: 🔧 Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: 🔍 타입 파일 추출
+        run: node scripts/extract-types.js
+
+      - name: 📦 SDK 패키지 의존성 설치
+        working-directory: ./sdk-package
+        run: npm install
+
+      - name: 🏗️ SDK 패키지 빌드
+        working-directory: ./sdk-package
+        run: npm run build
+
+      - name: 📊 버전 확인 및 업데이트
+        id: version
+        working-directory: ./sdk-package
+        run: |
+          # 현재 버전 가져오기
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "현재 버전: $CURRENT_VERSION"
+
+          # 패치 버전 자동 증가
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR="${VERSION_PARTS[0]}"
+          MINOR="${VERSION_PARTS[1]}"
+          PATCH="${VERSION_PARTS[2]}"
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+
+          echo "새 버전: $NEW_VERSION"
+
+          # package.json 버전 업데이트
+          npm version $NEW_VERSION --no-git-tag-version
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: 🚀 NPM에 배포
+        working-directory: ./sdk-package
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: ✅ 배포 완료 알림
+        run: |
+          echo "🎉 SDK 버전 ${{ steps.version.outputs.version }} 배포 완료!"
+          echo "📦 패키지: @byzip/types"
+          echo "🔗 https://www.npmjs.com/package/@byzip/types"
