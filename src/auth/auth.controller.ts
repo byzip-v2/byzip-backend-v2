@@ -1,14 +1,24 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import {
   DeleteUserRequestDto,
   DeleteUserResponseDto,
   LoginRequestDto,
   LoginResponseDto,
+  LogoutResponseDto,
+  RefreshTokenRequestDto,
+  RefreshTokenResponseDto,
   RegisterRequestDto,
   RegisterResponseDto,
 } from '../types/dto/auth/auth.dto';
+import { UsersModel } from '../users/entities/users.entity';
 import { AuthService } from './auth.service';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
@@ -71,5 +81,48 @@ export class AuthController {
     @Body() deleteData: DeleteUserRequestDto,
   ): Promise<DeleteUserResponseDto> {
     return await this.authService.deleteUser(deleteData);
+  }
+
+  @Post('logout')
+  @ApiOperation({
+    summary: '로그아웃',
+    description:
+      '로그인된 사용자를 로그아웃 처리합니다. 클라이언트는 토큰을 삭제해야 합니다.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '로그아웃 성공',
+    type: LogoutResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증되지 않은 사용자',
+  })
+  @ApiBearerAuth('JWT-auth')
+  async logout(@CurrentUser() user: UsersModel): Promise<LogoutResponseDto> {
+    return await this.authService.logout(user.userId);
+  }
+
+  @Public()
+  @Post('refresh')
+  @ApiOperation({
+    summary: '토큰 갱신',
+    description:
+      'Refresh Token을 사용하여 새로운 Access Token과 Refresh Token을 발급받습니다.',
+  })
+  @ApiBody({ type: RefreshTokenRequestDto })
+  @ApiResponse({
+    status: 201,
+    description: '토큰 갱신 성공',
+    type: RefreshTokenResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: '유효하지 않거나 만료된 토큰',
+  })
+  async refresh(
+    @Body() body: RefreshTokenRequestDto,
+  ): Promise<RefreshTokenResponseDto> {
+    return await this.authService.refreshAccessToken(body.refreshToken);
   }
 }

@@ -7,7 +7,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { RegisterRequestDto } from '../types/dto/auth/auth.dto';
-import type { UsersModelDto } from '../types/dto/user/user.dto';
+import {
+  GetMeDataDto,
+  GetMeResponseDto,
+  UpdateUserDataDto,
+  UpdateUserResponseDto,
+  type UsersModelDto,
+} from '../types/dto/user/user.dto';
 import { UsersModel } from './entities/users.entity';
 
 @Injectable()
@@ -83,7 +89,7 @@ export class UsersService {
   async update(
     id: number,
     userData: Partial<UsersModelDto>,
-  ): Promise<UsersModel | null> {
+  ): Promise<UpdateUserResponseDto | null> {
     this.logger.log(
       `업데이트 시도: ID=${id}, 데이터=${JSON.stringify(userData)}`,
     );
@@ -110,7 +116,33 @@ export class UsersService {
     // 업데이트된 사용자 정보 반환
     const updatedUser = await this.findOne(id);
     this.logger.log(`업데이트 후 사용자: ${JSON.stringify(updatedUser)}`);
-    return updatedUser;
+
+    if (!updatedUser) {
+      return null;
+    }
+
+    const data: UpdateUserDataDto = {
+      id: updatedUser.id,
+      userId: updatedUser.userId,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phoneNumber: updatedUser.phoneNumber,
+      profileImageUrl: updatedUser.profileImageUrl,
+      birthDate: updatedUser.birthDate,
+      gender: updatedUser.gender,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+      status: updatedUser.status,
+      role: updatedUser.role,
+      emailVerified: updatedUser.emailVerified,
+      phoneVerified: updatedUser.phoneVerified,
+    };
+
+    return {
+      success: true,
+      message: '사용자 정보가 성공적으로 업데이트되었습니다.',
+      data,
+    };
   }
 
   async remove(id: number): Promise<void> {
@@ -123,9 +155,7 @@ export class UsersService {
   }
 
   // 현재 사용자 프로필 조회 (비밀번호 제외)
-  async getMyProfile(
-    userId: string,
-  ): Promise<Omit<UsersModel, 'password'> | null> {
+  async getMyProfile(userId: string): Promise<GetMeResponseDto | null> {
     const user = await this.usersRepository.findOne({
       where: { userId },
       select: [
@@ -146,6 +176,31 @@ export class UsersService {
       ],
     });
 
-    return user as Omit<UsersModel, 'password'> | null;
+    if (!user) {
+      return null;
+    }
+
+    const data: GetMeDataDto = {
+      id: user.id,
+      userId: user.userId,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      profileImageUrl: user.profileImageUrl,
+      birthDate: user.birthDate,
+      gender: user.gender,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      status: user.status,
+      role: user.role,
+      emailVerified: user.emailVerified,
+      phoneVerified: user.phoneVerified,
+    };
+
+    return {
+      success: true,
+      message: '사용자 정보를 성공적으로 조회했습니다.',
+      data,
+    };
   }
 }

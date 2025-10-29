@@ -144,3 +144,65 @@ export class DeleteUserResponseDto {
   })
   data: { userId: string };
 }
+
+export class LogoutDataDto {
+  @ApiProperty({
+    description: '로그아웃된 사용자 ID',
+    example: 'user123',
+  })
+  userId: string;
+
+  @ApiProperty({
+    description: '로그아웃 시간',
+    example: '2024-01-01T00:00:00Z',
+  })
+  logoutAt: string;
+}
+
+export class LogoutResponseDto {
+  @ApiProperty({
+    description: '요청 성공 여부',
+    example: true,
+  })
+  success: boolean;
+
+  @ApiProperty({
+    description: '응답 메시지',
+    example: '로그아웃이 성공적으로 처리되었습니다.',
+  })
+  message: string;
+
+  @ApiProperty({
+    description: '로그아웃 데이터',
+    type: LogoutDataDto,
+  })
+  data: LogoutDataDto;
+}
+
+export class RefreshTokenRequestDto {
+  @ApiProperty({
+    description: '리프레시 토큰',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  refreshToken: string;
+}
+
+export class RefreshTokenResponseDto {
+  @ApiProperty({
+    description: '요청 성공 여부',
+    example: true,
+  })
+  success: boolean;
+
+  @ApiProperty({
+    description: '응답 메시지',
+    example: '토큰이 성공적으로 갱신되었습니다.',
+  })
+  message: string;
+
+  @ApiProperty({
+    description: '새로운 토큰 데이터',
+    type: TokenDataDto,
+  })
+  data: TokenDataDto;
+}

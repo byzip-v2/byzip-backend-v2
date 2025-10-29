@@ -54,7 +54,7 @@ export interface UsersModelDto {
   /** 전화번호 인증 여부 */
   phoneVerified: boolean;
 }
-export class GetMeResponseDto {
+export class GetMeDataDto {
   @ApiProperty({
     description: '사용자 고유 ID',
     example: 1,
@@ -147,34 +147,117 @@ export class GetMeResponseDto {
   phoneVerified: boolean;
 }
 
-export interface ChangePasswordRequestDto {
-  /** 현재 비밀번호 */
+export class GetMeResponseDto {
+  @ApiProperty({
+    description: '요청 성공 여부',
+    example: true,
+  })
+  success: boolean;
+
+  @ApiProperty({
+    description: '응답 메시지',
+    example: '사용자 정보를 성공적으로 조회했습니다.',
+  })
+  message: string;
+
+  @ApiProperty({
+    description: '사용자 정보 데이터',
+    type: GetMeDataDto,
+  })
+  data: GetMeDataDto;
+}
+
+export class ChangePasswordRequestDto {
+  @ApiProperty({
+    description: '현재 비밀번호',
+    example: 'currentPassword123!',
+  })
   currentPassword: string;
-  /** 새 비밀번호 */
+
+  @ApiProperty({
+    description: '새 비밀번호',
+    example: 'newPassword123!',
+  })
   newPassword: string;
-  /** 새 비밀번호 확인 */
+
+  @ApiProperty({
+    description: '새 비밀번호 확인',
+    example: 'newPassword123!',
+  })
   confirmPassword: string;
 }
-export interface ChangePasswordResponseDto {
-  /** 성공 메시지 */
-  message: string;
-  /** 새 토큰 발급 여부 */
+
+export class ChangePasswordDataDto {
+  @ApiProperty({
+    description: '새 토큰 발급 여부',
+    example: false,
+  })
   tokenRefreshRequired: boolean;
 }
-export interface DeleteAccountRequestDto {
-  /** 비밀번호 확인 */
+
+export class ChangePasswordResponseDto {
+  @ApiProperty({
+    description: '요청 성공 여부',
+    example: true,
+  })
+  success: boolean;
+
+  @ApiProperty({
+    description: '응답 메시지',
+    example: '비밀번호가 성공적으로 변경되었습니다.',
+  })
+  message: string;
+
+  @ApiProperty({
+    description: '비밀번호 변경 데이터',
+    type: ChangePasswordDataDto,
+  })
+  data: ChangePasswordDataDto;
+}
+export class DeleteAccountRequestDto {
+  @ApiProperty({
+    description: '비밀번호 확인',
+    example: 'password123!',
+  })
   password: string;
-  /** 삭제 사유 */
+
+  @ApiProperty({
+    description: '삭제 사유',
+    example: '더 이상 서비스를 사용하지 않음',
+    required: false,
+  })
   reason?: string;
 }
-export interface DeleteAccountResponseDto {
-  /** 성공 메시지 */
-  message: string;
-  /** 계정 삭제 예정일 (Unix timestamp) */
+
+export class DeleteAccountDataDto {
+  @ApiProperty({
+    description: '계정 삭제 예정일 (Unix timestamp)',
+    example: 1704067200,
+  })
   scheduledDeletionDate: number;
 }
 
-export class GetAllUsersResponseDto {
+export class DeleteAccountResponseDto {
+  @ApiProperty({
+    description: '요청 성공 여부',
+    example: true,
+  })
+  success: boolean;
+
+  @ApiProperty({
+    description: '응답 메시지',
+    example: '계정 삭제 요청이 성공적으로 처리되었습니다.',
+  })
+  message: string;
+
+  @ApiProperty({
+    description: '계정 삭제 데이터',
+    type: DeleteAccountDataDto,
+  })
+  data: DeleteAccountDataDto;
+}
+
+export class UserSummaryDto {
   @ApiProperty({
     description: '사용자 고유 ID',
     example: 1,
@@ -238,6 +321,26 @@ export class GetAllUsersResponseDto {
     example: true,
   })
   emailVerified: boolean;
+}
+
+export class GetAllUsersResponseDto {
+  @ApiProperty({
+    description: '요청 성공 여부',
+    example: true,
+  })
+  success: boolean;
+
+  @ApiProperty({
+    description: '응답 메시지',
+    example: '사용자 목록을 성공적으로 조회했습니다.',
+  })
+  message: string;
+
+  @ApiProperty({
+    description: '사용자 목록 데이터',
+    type: [UserSummaryDto],
+  })
+  data: UserSummaryDto[];
 }
 
 export class UpdateUserRequestDto {
@@ -286,7 +389,7 @@ export class UpdateUserRequestDto {
   gender?: UsersGenderEnum;
 }
 
-export class UpdateUserResponseDto {
+export class UpdateUserDataDto {
   @ApiProperty({
     description: '사용자 고유 ID',
     example: 1,
@@ -377,4 +480,24 @@ export class UpdateUserResponseDto {
     example: false,
   })
   phoneVerified: boolean;
+}
+
+export class UpdateUserResponseDto {
+  @ApiProperty({
+    description: '요청 성공 여부',
+    example: true,
+  })
+  success: boolean;
+
+  @ApiProperty({
+    description: '응답 메시지',
+    example: '사용자 정보가 성공적으로 업데이트되었습니다.',
+  })
+  message: string;
+
+  @ApiProperty({
+    description: '업데이트된 사용자 정보',
+    type: UpdateUserDataDto,
+  })
+  data: UpdateUserDataDto;
 }

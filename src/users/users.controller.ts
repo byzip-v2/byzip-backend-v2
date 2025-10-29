@@ -53,7 +53,7 @@ export class UsersController {
       if (!profile) {
         throw new NotFoundException('사용자 프로필을 찾을 수 없습니다.');
       }
-      return profile as GetMeResponseDto;
+      return profile;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -70,11 +70,11 @@ export class UsersController {
   @ApiResponse({
     status: 200,
     description: '유저 목록 조회 성공',
-    type: [GetAllUsersResponseDto],
+    type: GetAllUsersResponseDto,
   })
-  async findAll(): Promise<GetAllUsersResponseDto[]> {
+  async findAll(): Promise<GetAllUsersResponseDto> {
     const users = await this.usersService.findAll();
-    return users.map((user) => ({
+    const userSummaries = users.map((user) => ({
       id: user.id,
       userId: user.userId,
       name: user.name,
@@ -86,6 +86,12 @@ export class UsersController {
       role: user.role,
       emailVerified: user.emailVerified,
     }));
+
+    return {
+      success: true,
+      message: '사용자 목록을 성공적으로 조회했습니다.',
+      data: userSummaries,
+    };
   }
 
   @Patch(':id')
@@ -115,6 +121,6 @@ export class UsersController {
     if (!updatedUser) {
       throw new NotFoundException('유저를 찾을 수 없습니다.');
     }
-    return updatedUser as UpdateUserResponseDto;
+    return updatedUser;
   }
 }

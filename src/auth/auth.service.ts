@@ -1,11 +1,16 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { Repository } from 'typeorm';
 import {
   DeleteUserRequestDto,
   DeleteUserResponseDto,
   LoginResponseDto,
+  LogoutDataDto,
+  LogoutResponseDto,
+  RefreshTokenResponseDto,
   RegisterRequestDto,
   RegisterResponseDto,
   TokenDataDto,
@@ -13,6 +18,7 @@ import {
 import { JwtPayload } from '../types/jwt.types';
 import { UsersModel } from '../users/entities/users.entity';
 import { UsersService } from '../users/users.service';
+import { RefreshToken } from './entities/auth.entity';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +26,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
   ) {}
 
   //  1) 사용자가 로그인 or 회원가입을 하면 엑세스 토큰과 리프레시 토큰을 발급받음
@@ -41,14 +49,29 @@ export class AuthService {
 
     return this.jwtService.sign(payload, {
       secret: jwtSecret,
-      expiresIn: isRefreshToken ? '365d' : '365d',
+      // 테스트용: Access Token: 1분, Refresh Token: 10분
+      // 프로덕션: Access Token: 1시간, Refresh Token: 30일
+      expiresIn: isRefreshToken ? '10m' : '1m',
     });
   }
 
   // 엑세스토큰과 리프레시토큰을 반환하는 로직
-  loginUser(user: Pick<UsersModel, 'userId'>): LoginResponseDto {
+  async loginUser(user: Pick<UsersModel, 'userId'>): Promise<LoginResponseDto> {
     const accessToken = this.signToken(user, false);
     const refreshToken = this.signToken(user, true);
+
+    // Refresh Token을 DB에 저장
+    const expiresAt = new Date();
+    // 테스트용: 10분 후
+    // 프로덕션: 30일 후 - expiresAt.setDate(expiresAt.getDate() + 30);
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+    await this.refreshTokenRepository.save({
+      userId: user.userId,
+      token: refreshToken,
+      expiresAt,
+    });
+
     const tokenData: TokenDataDto = { accessToken, refreshToken };
     return {
       success: true,
@@ -112,9 +135,22 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    // 회원가입 성공 후 토큰 반환
+    // 회원가입 성공 후 토큰 발급 및 저장
     const accessToken = this.signToken({ userId: newUser.userId }, false);
     const refreshToken = this.signToken({ userId: newUser.userId }, true);
+
+    // Refresh Token을 DB에 저장
+    const expiresAt = new Date();
+    // 테스트용: 10분 후
+    // 프로덕션: 30일 후 - expiresAt.setDate(expiresAt.getDate() + 30);
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+    await this.refreshTokenRepository.save({
+      userId: newUser.userId,
+      token: refreshToken,
+      expiresAt,
+    });
+
     const tokenData: TokenDataDto = { accessToken, refreshToken };
     return {
       success: true,
@@ -189,5 +225,85 @@ export class AuthService {
   rotateToken(token: string, isRefreshToken: boolean) {
     const decodedToken = this.verifyToken(token);
     return this.signToken({ userId: decodedToken.sub }, isRefreshToken);
+  }
+
+  async logout(userId: string): Promise<LogoutResponseDto> {
+    // DB에서 해당 사용자의 모든 Refresh Token 삭제
+    await this.refreshTokenRepository.delete({ userId });
+
+    const data: LogoutDataDto = {
+      userId,
+      logoutAt: new Date().toISOString(),
+    };
+
+    return {
+      success: true,
+      message: '로그아웃이 성공적으로 처리되었습니다.',
+      data,
+    };
+  }
+
+  async refreshAccessToken(
+    refreshToken: string,
+  ): Promise<RefreshTokenResponseDto> {
+    try {
+      // 1. Refresh Token 검증
+      const decoded = this.verifyToken(refreshToken);
+
+      if (decoded.type !== 'refresh') {
+        throw new UnauthorizedException('유효하지 않은 토큰 타입입니다.');
+      }
+
+      // 2. DB에서 Refresh Token 확인
+      const storedToken = await this.refreshTokenRepository.findOne({
+        where: { userId: decoded.sub, token: refreshToken },
+      });
+
+      if (!storedToken) {
+        throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
+      }
+
+      // 3. 만료 시간 확인
+      if (new Date(storedToken.expiresAt) < new Date()) {
+        // 만료된 토큰 삭제
+        await this.refreshTokenRepository.delete({ id: storedToken.id });
+        throw new UnauthorizedException('만료된 리프레시 토큰입니다.');
+      }
+
+      // 4. 새로운 Access Token 생성
+      const newAccessToken = this.signToken({ userId: decoded.sub }, false);
+
+      // 5. 새로운 Refresh Token 생성 (선택적 - Refresh Token Rotation)
+      const newRefreshToken = this.signToken({ userId: decoded.sub }, true);
+
+      // 6. 새로운 Refresh Token을 DB에 저장하고 기존 토큰 삭제
+      const expiresAt = new Date();
+      // 테스트용: 10분 후
+      // 프로덕션: 30일 후 - expiresAt.setDate(expiresAt.getDate() + 30);
+      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+      await this.refreshTokenRepository.delete({ id: storedToken.id });
+      await this.refreshTokenRepository.save({
+        userId: decoded.sub,
+        token: newRefreshToken,
+        expiresAt,
+      });
+
+      const tokenData: TokenDataDto = {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
+
+      return {
+        success: true,
+        message: '토큰이 성공적으로 갱신되었습니다.',
+        data: tokenData,
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException('토큰 갱신에 실패했습니다.');
+    }
   }
 }
