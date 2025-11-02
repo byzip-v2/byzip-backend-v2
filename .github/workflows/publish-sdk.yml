@@ -7,7 +7,8 @@ on:
       - dev
     paths:
       - 'src/types/**'
-      - 'scripts/extract-types.sh'
+      - 'scripts/extract-types.js'
+      - 'sdk-package/**'
 
 jobs:
   publish:
@@ -38,9 +39,22 @@ jobs:
         id: version
         working-directory: ./sdk-package
         run: |
-          # 현재 버전 가져오기
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          echo "현재 버전: $CURRENT_VERSION"
+          # npm에 배포된 최신 버전 가져오기
+          NPM_VERSION=$(npm view byzip-v2-sdk version 2>/dev/null || echo "0.0.0")
+          echo "npm 최신 버전: $NPM_VERSION"
+
+          # 로컬 package.json 버전
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+          echo "로컬 버전: $LOCAL_VERSION"
+
+          # 더 높은 버전 선택
+          if [ "$NPM_VERSION" != "0.0.0" ]; then
+            CURRENT_VERSION=$NPM_VERSION
+          else
+            CURRENT_VERSION=$LOCAL_VERSION
+          fi
+
+          echo "기준 버전: $CURRENT_VERSION"
 
           # 패치 버전 자동 증가
           IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
