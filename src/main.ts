@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import basicAuth from 'express-basic-auth';
+import * as sdkPackage from '../sdk-package/package.json';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
@@ -25,8 +26,7 @@ async function bootstrap(): Promise<void> {
 
   const config = new DocumentBuilder()
     .setTitle('ByZip API')
-    .setDescription('byzip-sdk version: 1.0.2')
-    .setVersion('2.0.0')
+    .setDescription(`byzip-sdk version: ${sdkPackage.version}`)
     .addBearerAuth(
       {
         type: 'http',

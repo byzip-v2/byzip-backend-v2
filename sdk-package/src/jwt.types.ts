@@ -8,3 +8,5 @@ export interface JwtPayload {
   /** 토큰 만료 시간 (expiration time) */
   exp?: number;
 }
+
+// GitHub Actions 테스트

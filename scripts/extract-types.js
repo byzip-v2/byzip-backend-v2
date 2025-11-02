@@ -30,16 +30,25 @@ function processFile(inputPath, outputPath) {
     const line = lines[i];
     const trimmedLine = line.trim();
 
-    // @nestjs/swagger import 건너뛰기
+    // @nestjs/swagger, class-validator import 건너뛰기
     if (
       trimmedLine.startsWith('import') &&
-      trimmedLine.includes('@nestjs/swagger')
+      (trimmedLine.includes('@nestjs/swagger') ||
+        trimmedLine.includes('class-validator'))
     ) {
       continue;
     }
 
-    // @ApiProperty 데코레이터 시작 감지
-    if (trimmedLine.startsWith('@ApiProperty')) {
+    // entity import 건너뛰기
+    if (
+      trimmedLine.startsWith('import') &&
+      trimmedLine.includes('/entities/')
+    ) {
+      continue;
+    }
+
+    // @ApiProperty, @IsString, @IsOptional 등 모든 데코레이터 건너뛰기
+    if (trimmedLine.startsWith('@')) {
       inDecorator = true;
       bracketCount = 0;
 

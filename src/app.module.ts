@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtGuard } from './auth/guards/jwt.guard';
+import { BugReportsModule } from './bug-reports/bug-reports.module';
 import { DatabaseModule } from './database/database.mobule';
 import { UsersModel } from './users/entities/users.entity';
 import { UsersModule } from './users/users.module';
@@ -23,6 +24,7 @@ import { UsersModule } from './users/users.module';
     TypeOrmModule.forFeature([UsersModel]), // AppService에서 UsersModel 사용
     UsersModule,
     AuthModule,
+    BugReportsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -16,98 +16,6 @@
 npm install byzip-v2-sdk
 ```
 
-## 🚀 사용법
-
-### 기본 import
-
-```typescript
-import {
-  // 인증 관련
-  LoginRequestDto,
-  LoginResponseDto,
-  RegisterRequestDto,
-  TokenDataDto,
-
-  // 사용자 관련
-  GetMeResponseDto,
-  UpdateUserRequestDto,
-  UsersRolesEnum,
-  UsersStatusEnum,
-
-  // 공통 응답
-  BaseResponseDto,
-  createSuccessResponse,
-  createErrorResponse,
-} from 'byzip-v2-sdk';
-```
-
-### 사용 예제
-
-#### 🔐 인증 관련
-
-```typescript
-import {
-  LoginRequestDto,
-  LoginResponseDto,
-  RegisterRequestDto,
-} from 'byzip-v2-sdk';
-
-// 로그인 요청
-const loginRequest: LoginRequestDto = {
-  userId: 'user123',
-  password: 'password123!',
-};
-
-// 회원가입 요청
-const registerRequest: RegisterRequestDto = {
-  userId: 'newuser',
-  name: '홍길동',
-  email: 'user@example.com',
-  password: 'password123!',
-  confirmPassword: 'password123!',
-  phoneNumber: '010-1234-5678', // 선택사항
-};
-
-// 로그인 응답 처리
-const handleLoginResponse = (response: LoginResponseDto) => {
-  if (response.success) {
-    console.log('로그인 성공:', response.data.accessToken);
-    console.log('메시지:', response.message);
-  }
-};
-```
-
-#### 👤 사용자 프로필 관련
-
-```typescript
-import {
-  GetMeResponseDto,
-  UpdateUserRequestDto,
-  UsersGenderEnum,
-  UsersRolesEnum,
-} from 'byzip-v2-sdk';
-
-// 프로필 조회 응답 처리
-const handleProfileResponse = (response: GetMeResponseDto) => {
-  const { data } = response;
-  console.log('사용자 ID:', data.userId);
-  console.log('이름:', data.name);
-  console.log('역할:', data.role);
-  console.log('상태:', data.status);
-  console.log('이메일 인증:', data.emailVerified);
-};
-
-// 프로필 업데이트 요청
-const updateRequest: UpdateUserRequestDto = {
-  name: '홍길동',
-  email: 'newemail@example.com',
-  phoneNumber: '010-9876-5432',
-  birthDate: '1990-01-01',
-  gender: UsersGenderEnum.MALE,
-  role: UsersRolesEnum.USER,
-};
-```
-
 #### 📝 공통 응답 처리
 
 ```typescript
@@ -135,55 +43,6 @@ const handleResponse = <T>(response: BaseResponseDto<T>) => {
   }
 };
 ```
-
-## 📚 타입 정의
-
-### 🔐 인증 관련 (Auth)
-
-| 타입                      | 설명             |
-| ------------------------- | ---------------- |
-| `LoginRequestDto`         | 로그인 요청      |
-| `LoginResponseDto`        | 로그인 응답      |
-| `RegisterRequestDto`      | 회원가입 요청    |
-| `RegisterResponseDto`     | 회원가입 응답    |
-| `TokenDataDto`            | 토큰 데이터      |
-| `RefreshTokenRequestDto`  | 토큰 갱신 요청   |
-| `RefreshTokenResponseDto` | 토큰 갱신 응답   |
-| `LogoutResponseDto`       | 로그아웃 응답    |
-| `DeleteUserRequestDto`    | 사용자 삭제 요청 |
-| `DeleteUserResponseDto`   | 사용자 삭제 응답 |
-
-### 👤 사용자 관련 (User)
-
-| 타입                        | 설명                  |
-| --------------------------- | --------------------- |
-| `UsersModelDto`             | 사용자 모델           |
-| `GetMeResponseDto`          | 내 정보 조회 응답     |
-| `GetMeDataDto`              | 내 정보 데이터        |
-| `UpdateUserRequestDto`      | 사용자 정보 수정 요청 |
-| `UpdateUserResponseDto`     | 사용자 정보 수정 응답 |
-| `GetAllUsersResponseDto`    | 모든 사용자 조회 응답 |
-| `UserSummaryDto`            | 사용자 요약 정보      |
-| `ChangePasswordRequestDto`  | 비밀번호 변경 요청    |
-| `ChangePasswordResponseDto` | 비밀번호 변경 응답    |
-| `DeleteAccountRequestDto`   | 계정 삭제 요청        |
-| `DeleteAccountResponseDto`  | 계정 삭제 응답        |
-
-### 📊 열거형 (Enums)
-
-| 열거형            | 값                                                        |
-| ----------------- | --------------------------------------------------------- |
-| `UsersRolesEnum`  | `ADMIN`, `USER`                                           |
-| `UsersStatusEnum` | `ACTIVE`, `INACTIVE`, `SUSPENDED`, `PENDING_VERIFICATION` |
-| `UsersGenderEnum` | `MALE`, `FEMALE`, `OTHER`                                 |
-
-### 📦 공통 (Common)
-
-| 타입                         | 설명                |
-| ---------------------------- | ------------------- |
-| `BaseResponseDto<T>`         | 기본 API 응답 구조  |
-| `createSuccessResponse<T>()` | 성공 응답 생성 함수 |
-| `createErrorResponse<T>()`   | 에러 응답 생성 함수 |
 
 ## 🤖 자동 배포
 
@@ -225,8 +84,6 @@ ISC
 ---
 
 ## 🔄 변경 로그
-
-### v1.0.2
 
 - ✅ 모든 DTO 클래스를 인터페이스로 변환
 - ✅ 런타임 의존성 제거 (`@nestjs/swagger` 제거)

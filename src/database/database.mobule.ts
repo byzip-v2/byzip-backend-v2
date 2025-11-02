@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from '../auth/entities/auth.entity';
+import { BugReport } from '../bug-reports/entities/bug-report.entity';
 import { UsersModel } from '../users/entities/users.entity';
 
 @Module({
@@ -11,7 +12,7 @@ import { UsersModel } from '../users/entities/users.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [UsersModel, RefreshToken],
+        entities: [UsersModel, RefreshToken, BugReport],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
         ssl: {

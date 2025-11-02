@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import basicAuth from 'express-basic-auth';
+import * as sdkPackage from '../sdk-package/package.json';
 import { AppModule } from '../src/app.module';
 
 let app: INestApplication;
@@ -33,8 +34,7 @@ async function bootstrap(): Promise<INestApplication> {
     // Swagger 설정
     const config = new DocumentBuilder()
       .setTitle('ByZip API')
-      .setDescription('byzip-sdk version: 1.0.2')
-      .setVersion('2.0.0')
+      .setDescription(`byzip-sdk version: ${sdkPackage.version}`)
       .addBearerAuth(
         {
           type: 'http',
