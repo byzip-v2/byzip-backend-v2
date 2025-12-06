@@ -2,7 +2,7 @@ import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
 import { SchedulerService } from './scheduler.service';
 
-@Controller('api/scheduler')
+@Controller('scheduler')
 export class SchedulerController {
   constructor(private readonly schedulerService: SchedulerService) {}
 

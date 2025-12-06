@@ -21,13 +21,9 @@ export class PublicDataService {
     const apiKey = this.configService.get<string>('PUBLIC_DATA_HOME__API_KEY');
     console.log('apiKey', apiKey);
 
-    if (!apiKey) {
-      throw new Error(
-        'PUBLIC_DATA_HOME__API_KEY 환경 변수가 설정되지 않았습니다. Vercel 환경 변수에 설정해주세요.',
-      );
-    }
-
-    this.apiKey = apiKey;
+    // 환경 변수가 없어도 생성자는 성공하도록 변경
+    // 실제 사용 시점에 검증하도록 변경
+    this.apiKey = apiKey || '';
     this.naverClientId = this.configService.get<string>('NAVER_CLIENT_ID');
     this.naverClientSecret = this.configService.get<string>(
       'NAVER_CLIENT_SECRET',
@@ -45,6 +41,20 @@ export class PublicDataService {
     error?: string;
   }> {
     try {
+      // 환경 변수 검증 (실제 사용 시점에 검증)
+      if (!this.apiKey) {
+        const errorMessage =
+          'PUBLIC_DATA_HOME__API_KEY 환경 변수가 설정되지 않았습니다. Vercel 환경 변수에 설정해주세요.';
+        this.logger.error(errorMessage);
+        return {
+          success: false,
+          message: errorMessage,
+          savedCount: 0,
+          geocodingFailedCount: 0,
+          error: errorMessage,
+        };
+      }
+
       this.logger.log('공공데이터 API 호출 시작');
 
       // TODO: 실제 API 엔드포인트로 변경 필요
