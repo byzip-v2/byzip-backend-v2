@@ -47,6 +47,15 @@ async function bootstrap(): Promise<INestApplication> {
           },
           'JWT-auth',
         )
+        .addApiKey(
+          {
+            type: 'apiKey',
+            name: 'X-API-Key',
+            in: 'header',
+            description: '스케줄러 API 키를 입력하세요',
+          },
+          'api-key', // This name is used in @ApiSecurity() decorator
+        )
         .build();
       const document = SwaggerModule.createDocument(app, config);
       SwaggerModule.setup('docs', app, document, {

@@ -25,7 +25,7 @@ Vercel 대시보드 또는 `.env.local` 파일에 다음 환경 변수를 추가
 
 ```bash
 # 공공데이터 포털 API 키 (공공데이터 포털에서 발급받은 키)
-DATA_HOME__API_KEY=your-api-key-here
+DATA_HOME_API_KEY=your-api-key-here
 ```
 
 **⚠️ 중요**: API 키는 절대 코드에 하드코딩하지 마세요. 환경 변수로만 관리하세요.
