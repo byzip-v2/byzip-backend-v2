@@ -18,7 +18,7 @@ export class PublicDataService {
     private readonly configService: ConfigService,
   ) {
     this.baseUrl = 'https://api.odcloud.kr/api';
-    const apiKey = this.configService.get<string>('PUBLIC_DATA_HOME__API_KEY');
+    const apiKey = this.configService.get<string>('DATA_HOME__API_KEY');
     console.log('apiKey', apiKey);
 
     // 환경 변수가 없어도 생성자는 성공하도록 변경
@@ -44,7 +44,7 @@ export class PublicDataService {
       // 환경 변수 검증 (실제 사용 시점에 검증)
       if (!this.apiKey) {
         const errorMessage =
-          'PUBLIC_DATA_HOME__API_KEY 환경 변수가 설정되지 않았습니다. Vercel 환경 변수에 설정해주세요.';
+          'DATA_HOME__API_KEY 환경 변수가 설정되지 않았습니다. Vercel 환경 변수에 설정해주세요.';
         this.logger.error(errorMessage);
         return {
           success: false,

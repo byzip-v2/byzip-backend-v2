@@ -25,18 +25,36 @@ Vercel 대시보드 또는 `.env.local` 파일에 다음 환경 변수를 추가
 
 ```bash
 # 공공데이터 포털 API 키 (공공데이터 포털에서 발급받은 키)
-PUBLIC_DATA_HOME__API_KEY=your-api-key-here
+DATA_HOME__API_KEY=your-api-key-here
 ```
 
 **⚠️ 중요**: API 키는 절대 코드에 하드코딩하지 마세요. 환경 변수로만 관리하세요.
 
-### 2. GitHub Secrets 설정 (선택사항)
+### 2. 스케줄러 API 키 설정 (필수)
 
-GitHub 저장소의 Settings > Secrets and variables > Actions에서 다음 시크릿을 추가할 수 있습니다:
+스케줄러 엔드포인트는 API 키 기반 인증을 사용합니다. 다음 환경 변수를 설정해야 합니다:
 
-- `SCHEDULER_API_URL`: 스케줄러 엔드포인트 URL (기본값: `https://api.by-zip.com/api/scheduler/public-data`)
+**서버 환경 변수:**
 
-### 3. API 엔드포인트 수정 필요
+```bash
+# 스케줄러 API 키 (GitHub Actions에서 사용할 키)
+SCHEDULER_API_KEY=your-secure-api-key-here
+```
+
+**⚠️ 중요**:
+
+- API 키는 강력한 랜덤 문자열을 사용하세요
+- 절대 코드에 하드코딩하지 마세요
+- 환경 변수로만 관리하세요
+
+### 3. GitHub Secrets 설정 (필수)
+
+GitHub 저장소의 Settings > Secrets and variables > Actions에서 다음 시크릿을 추가해야 합니다:
+
+- `SCHEDULER_API_KEY`: 스케줄러 API 키 (서버의 `SCHEDULER_API_KEY`와 동일한 값)
+- `SCHEDULER_API_URL`: 스케줄러 엔드포인트 URL (선택사항, 기본값: `https://api.by-zip.com/api/scheduler/public-data`)
+
+### 4. API 엔드포인트 수정 필요
 
 현재 `public-data.service.ts`의 API 엔드포인트는 예시입니다. 실제 API 명세서(Swagger)를 확인하여 다음을 수정해야 합니다:
 
@@ -82,6 +100,8 @@ GitHub Actions에서 수동으로 실행:
 
 ```
 GET /api/scheduler/public-data
+Headers:
+  X-API-Key: {SCHEDULER_API_KEY}
 ```
 
 **응답 예시:**
@@ -149,7 +169,16 @@ GET /api/scheduler/public-data
 
 1. GitHub Actions 워크플로우가 활성화되어 있는지 확인
 2. Cron 표현식이 올바른지 확인 (`0 18 * * *` = UTC 18시 = KST 오전 3시)
-3. `SCHEDULER_API_URL`이 올바르게 설정되어 있는지 확인 (선택사항, 기본값 사용 가능)
+3. `SCHEDULER_API_KEY`가 GitHub Secrets에 올바르게 설정되어 있는지 확인 (필수)
+4. 서버의 `SCHEDULER_API_KEY` 환경 변수가 설정되어 있는지 확인 (필수)
+5. `SCHEDULER_API_URL`이 올바르게 설정되어 있는지 확인 (선택사항, 기본값 사용 가능)
+
+### 401 Unauthorized 에러 발생 시
+
+1. GitHub Secrets의 `SCHEDULER_API_KEY`가 설정되어 있는지 확인
+2. 서버의 `SCHEDULER_API_KEY` 환경 변수가 설정되어 있는지 확인
+3. GitHub Secrets와 서버 환경 변수의 API 키가 동일한지 확인
+4. `X-API-Key` 헤더가 올바르게 전송되는지 확인
 
 ### API 호출 실패
 

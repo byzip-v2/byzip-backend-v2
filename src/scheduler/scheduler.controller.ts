@@ -1,12 +1,18 @@
-import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
-import { Public } from '../auth/decorators/public.decorator';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiKeyGuard } from './guards/api-key.guard';
 import { SchedulerService } from './scheduler.service';
 
 @Controller('scheduler')
 export class SchedulerController {
   constructor(private readonly schedulerService: SchedulerService) {}
 
-  @Public()
+  @UseGuards(ApiKeyGuard)
   @Get('public-data')
   @HttpCode(HttpStatus.OK)
   async triggerScheduler(): Promise<{
