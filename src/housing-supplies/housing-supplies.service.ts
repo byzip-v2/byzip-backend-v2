@@ -242,5 +242,142 @@ export class HousingSuppliesService {
       message: '주택 공급 정보가 성공적으로 삭제되었습니다.',
     };
   }
+
+  // 좌표가 없는 주택 공급 정보 조회 (latitude 또는 longitude가 null인 것들)
+  async findMissingCoordinates(
+    query: GetHousingSuppliesQueryDto,
+  ): Promise<GetHousingSuppliesResponseDto> {
+    this.logger.log(
+      `좌표가 없는 주택 공급 정보 조회: ${JSON.stringify(query)}`,
+    );
+
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+    const sortBy = query.sortBy || 'rcritPblancDe';
+    const sortOrder = query.sortOrder || 'DESC';
+
+    // QueryBuilder 생성
+    const queryBuilder =
+      this.housingSupplyRepository.createQueryBuilder('housingSupply');
+
+    // latitude 또는 longitude 중 하나라도 null인 조건 추가
+    queryBuilder.andWhere(
+      '(housingSupply.latitude IS NULL OR housingSupply.longitude IS NULL)',
+    );
+
+    // 검색 기능 (주택명, 주소, 공고번호에서 검색)
+    if (query.search) {
+      queryBuilder.andWhere(
+        '(housingSupply.houseName ILIKE :search OR housingSupply.hssplyAdres ILIKE :search OR housingSupply.pblancNo ILIKE :search OR housingSupply.houseManageNo ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+
+    // 필터링
+    if (query.houseSecd) {
+      queryBuilder.andWhere('housingSupply.houseSecd = :houseSecd', {
+        houseSecd: query.houseSecd,
+      });
+    }
+
+    if (query.houseSecdNm) {
+      queryBuilder.andWhere('housingSupply.houseSecdNm = :houseSecdNm', {
+        houseSecdNm: query.houseSecdNm,
+      });
+    }
+
+    if (query.houseDtlSecd) {
+      queryBuilder.andWhere('housingSupply.houseDtlSecd = :houseDtlSecd', {
+        houseDtlSecd: query.houseDtlSecd,
+      });
+    }
+
+    if (query.rentSecd) {
+      queryBuilder.andWhere('housingSupply.rentSecd = :rentSecd', {
+        rentSecd: query.rentSecd,
+      });
+    }
+
+    if (query.subscrptAreaCodeNm) {
+      queryBuilder.andWhere(
+        'housingSupply.subscrptAreaCodeNm = :subscrptAreaCodeNm',
+        {
+          subscrptAreaCodeNm: query.subscrptAreaCodeNm,
+        },
+      );
+    }
+
+    // 날짜 범위 필터링
+    if (query.rcritPblancDeFrom) {
+      queryBuilder.andWhere(
+        'housingSupply.rcritPblancDe >= :rcritPblancDeFrom',
+        {
+          rcritPblancDeFrom: query.rcritPblancDeFrom,
+        },
+      );
+    }
+
+    if (query.rcritPblancDeTo) {
+      queryBuilder.andWhere('housingSupply.rcritPblancDe <= :rcritPblancDeTo', {
+        rcritPblancDeTo: query.rcritPblancDeTo,
+      });
+    }
+
+    if (query.rceptBgndeFrom) {
+      queryBuilder.andWhere('housingSupply.rceptBgnde >= :rceptBgndeFrom', {
+        rceptBgndeFrom: query.rceptBgndeFrom,
+      });
+    }
+
+    if (query.rceptBgndeTo) {
+      queryBuilder.andWhere('housingSupply.rceptBgnde <= :rceptBgndeTo', {
+        rceptBgndeTo: query.rceptBgndeTo,
+      });
+    }
+
+    // 플래그 필터링
+    if (query.parcprcUlsAt) {
+      queryBuilder.andWhere('housingSupply.parcprcUlsAt = :parcprcUlsAt', {
+        parcprcUlsAt: query.parcprcUlsAt,
+      });
+    }
+
+    if (query.specltRdnEarthAt) {
+      queryBuilder.andWhere(
+        'housingSupply.specltRdnEarthAt = :specltRdnEarthAt',
+        {
+          specltRdnEarthAt: query.specltRdnEarthAt,
+        },
+      );
+    }
+
+    // 정렬
+    queryBuilder.orderBy(`housingSupply.${sortBy}`, sortOrder);
+
+    // 전체 개수 조회 (필터링 적용)
+    const total = await queryBuilder.getCount();
+
+    // 페이징 적용
+    queryBuilder.skip(skip).take(limit);
+
+    // 데이터 조회
+    const housingSupplies = await queryBuilder.getMany();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      success: true,
+      message: '좌표가 없는 주택 공급 정보 목록을 성공적으로 조회했습니다.',
+      data: housingSupplies,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        itemCount: housingSupplies.length,
+      },
+    };
+  }
 }
 

@@ -112,6 +112,14 @@ export class CreateBugReportDto {
   @IsObject()
   @IsOptional()
   metadata?: Record<string, any>;
+
+  @ApiPropertyOptional({
+    description: '메모',
+    example: '관리자 메모 또는 추가 정보',
+  })
+  @IsString()
+  @IsOptional()
+  memo?: string;
 }
 
 // 버그 리포트 업데이트 요청 DTO
@@ -172,6 +180,11 @@ export class UpdateBugReportDto {
   @IsObject()
   @IsOptional()
   metadata?: Record<string, any>;
+
+  @ApiPropertyOptional({ description: '메모' })
+  @IsString()
+  @IsOptional()
+  memo?: string;
 }
 
 // 버그 리포트 응답 데이터
@@ -217,6 +230,9 @@ export class BugReportDataDto {
 
   @ApiPropertyOptional({ description: '추가 메타데이터' })
   metadata?: Record<string, any>;
+
+  @ApiPropertyOptional({ description: '메모' })
+  memo?: string;
 
   @ApiProperty({ description: '생성일시' })
   createdAt: Date;

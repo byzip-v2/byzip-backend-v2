@@ -88,6 +88,9 @@ export class BugReport {
   @Column({ type: 'jsonb', nullable: true })
   metadata?: Record<string, any>;
 
+  @Column({ type: 'text', nullable: true })
+  memo?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
