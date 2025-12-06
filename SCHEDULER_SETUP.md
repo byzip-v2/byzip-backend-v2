@@ -52,7 +52,7 @@ SCHEDULER_API_KEY=your-secure-api-key-here
 GitHub 저장소의 Settings > Secrets and variables > Actions에서 다음 시크릿을 추가해야 합니다:
 
 - `SCHEDULER_API_KEY`: 스케줄러 API 키 (서버의 `SCHEDULER_API_KEY`와 동일한 값)
-- `SCHEDULER_API_URL`: 스케줄러 엔드포인트 URL (선택사항, 기본값: `https://api.by-zip.com/api/scheduler/public-data`)
+- `SCHEDULER_API_URL`: 스케줄러 엔드포인트 URL (선택사항, 기본값: `https://api.by-zip.com/scheduler/public-data`)
 
 ### 4. API 엔드포인트 수정 필요
 
@@ -99,7 +99,7 @@ GitHub Actions에서 수동으로 실행:
 ### 스케줄러 트리거
 
 ```
-GET /api/scheduler/public-data
+GET /scheduler/public-data
 Headers:
   X-API-Key: {SCHEDULER_API_KEY}
 ```

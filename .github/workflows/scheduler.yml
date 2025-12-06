@@ -20,35 +20,35 @@ jobs:
     steps:
       - name: 🔔 스케줄러 API 호출
         run: |
-          API_URL="${{ secrets.SCHEDULER_API_URL || 'https://api.by-zip.com/api/scheduler/public-data' }}"
+          API_URL="${{ secrets.SCHEDULER_API_URL || 'https://api.by-zip.com/scheduler/public-data' }}"
           API_KEY="${{ secrets.SCHEDULER_API_KEY }}"
-          
+
           if [ -z "$API_KEY" ]; then
             echo "❌ SCHEDULER_API_KEY 시크릿이 설정되지 않았습니다."
             exit 1
           fi
-          
+
           echo "📡 스케줄러 API 호출 중..."
           echo "URL: $API_URL"
-          
+
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X GET \
             -H "Content-Type: application/json" \
             -H "X-API-Key: $API_KEY" \
             "$API_URL")
-          
+
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | sed '$d')
-          
+
           echo "📊 응답 코드: $HTTP_CODE"
           echo "📄 응답 내용:"
           echo "$BODY" | jq '.' || echo "$BODY"
-          
+
           if [ "$HTTP_CODE" -ne 200 ]; then
             echo "❌ 스케줄러 실행 실패 (HTTP $HTTP_CODE)"
             exit 1
           fi
-          
+
           # 응답에서 success 확인
           SUCCESS=$(echo "$BODY" | jq -r '.success // false')
           if [ "$SUCCESS" != "true" ]; then
@@ -56,7 +56,6 @@ jobs:
             echo "$BODY" | jq '.results // []' || echo "결과를 확인할 수 없습니다"
             exit 1
           fi
-          
+
           echo "✅ 스케줄러 실행 성공"
           echo "$BODY" | jq '.results // []' || echo "결과를 확인할 수 없습니다"
-
