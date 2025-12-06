@@ -22,6 +22,7 @@ import {
   CreateBugReportResponseDto,
   DeleteBugReportResponseDto,
   GetBugReportResponseDto,
+  GetBugReportsQueryDto,
   GetBugReportsResponseDto,
   UpdateBugReportDto,
   UpdateBugReportResponseDto,
@@ -57,13 +58,9 @@ export class BugReportsController {
   @Get()
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: '모든 버그 리포트 조회',
-    description: '등록된 모든 버그 리포트를 조회합니다. (관리자용)',
-  })
-  @ApiQuery({
-    name: 'userId',
-    required: false,
-    description: '특정 사용자의 버그 리포트만 조회',
+    summary: '버그 리포트 목록 조회',
+    description:
+      '검색, 필터링, 페이징, 정렬 기능을 지원하는 버그 리포트 목록을 조회합니다. (관리자용)',
   })
   @ApiResponse({
     status: 200,
@@ -75,12 +72,9 @@ export class BugReportsController {
     description: '인증되지 않은 사용자',
   })
   async findAll(
-    @Query('userId') userId?: string,
+    @Query() query: GetBugReportsQueryDto,
   ): Promise<GetBugReportsResponseDto> {
-    if (userId) {
-      return await this.bugReportsService.findByUserId(userId);
-    }
-    return await this.bugReportsService.findAll();
+    return await this.bugReportsService.findAll(query);
   }
 
   @Get(':id')

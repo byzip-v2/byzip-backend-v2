@@ -23,6 +23,8 @@ function processFile(inputPath, outputPath) {
   const output = [];
   let inDecorator = false;
   let inMethod = false;
+  let inImport = false;
+  let importLines = [];
   let bracketCount = 0;
   let braceCount = 0;
 
@@ -30,13 +32,51 @@ function processFile(inputPath, outputPath) {
     const line = lines[i];
     const trimmedLine = line.trim();
 
-    // @nestjs/swagger, class-validator import 건너뛰기
-    if (
-      trimmedLine.startsWith('import') &&
-      (trimmedLine.includes('@nestjs/swagger') ||
-        trimmedLine.includes('class-validator'))
-    ) {
+    // import 시작 감지
+    if (trimmedLine.startsWith('import')) {
+      importLines = [line];
+      
+      // 멀티라인 import인지 확인 (중괄호가 열려있고 닫히지 않음)
+      if (trimmedLine.includes('{') && !trimmedLine.includes('}')) {
+        inImport = true;
+      } else {
+        // 단일 라인 import - 바로 확인
+        const shouldSkip =
+          trimmedLine.includes('@nestjs/swagger') ||
+          trimmedLine.includes('class-validator') ||
+          trimmedLine.includes('class-transformer');
+        
+        if (shouldSkip) {
+          continue;
+        }
+        importLines = [];
+      }
       continue;
+    }
+
+    // 멀티라인 import 처리
+    if (inImport) {
+      importLines.push(line);
+      
+      // import 블록이 끝나는지 확인 (} from '...' 형태)
+      if (trimmedLine.includes('}') && trimmedLine.includes('from')) {
+        inImport = false;
+        
+        // 전체 import 블록을 합쳐서 확인
+        const fullImport = importLines.join(' ');
+        const shouldSkip =
+          fullImport.includes('@nestjs/swagger') ||
+          fullImport.includes('class-validator') ||
+          fullImport.includes('class-transformer');
+        
+        if (shouldSkip) {
+          importLines = [];
+          continue;
+        }
+        importLines = [];
+      } else {
+        continue;
+      }
     }
 
     // entity import 건너뛰기

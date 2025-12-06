@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
 import { JwtGuard } from './auth/guards/jwt.guard';
 import { BugReportsModule } from './bug-reports/bug-reports.module';
 import { DatabaseModule } from './database/database.mobule';
+import { HousingSuppliesModule } from './housing-supplies/housing-supplies.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 import { UsersModel } from './users/entities/users.entity';
 import { UsersModule } from './users/users.module';
 
@@ -25,6 +27,8 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     AuthModule,
     BugReportsModule,
+    SchedulerModule,
+    HousingSuppliesModule,
   ],
   controllers: [AppController],
   providers: [

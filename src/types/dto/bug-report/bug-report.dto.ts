@@ -1,10 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsObject,
   IsOptional,
   IsString,
+  Max,
+  Min,
 } from 'class-validator';
 import {
   BugReportErrorType,
@@ -233,6 +237,120 @@ export class GetBugReportResponseDto {
   data: BugReportDataDto;
 }
 
+// 버그 리포트 목록 조회 쿼리 DTO
+export class GetBugReportsQueryDto {
+  @ApiPropertyOptional({
+    description: '검색어 (제목, 설명, 에러 메시지에서 검색)',
+    example: 'TypeError',
+  })
+  @IsString()
+  @IsOptional()
+  search?: string;
+
+  @ApiPropertyOptional({
+    description: '상태 필터',
+    enum: BugReportStatus,
+    example: BugReportStatus.OPEN,
+  })
+  @IsEnum(BugReportStatus)
+  @IsOptional()
+  status?: BugReportStatus;
+
+  @ApiPropertyOptional({
+    description: '심각도 필터',
+    enum: BugReportSeverity,
+    example: BugReportSeverity.HIGH,
+  })
+  @IsEnum(BugReportSeverity)
+  @IsOptional()
+  severity?: BugReportSeverity;
+
+  @ApiPropertyOptional({
+    description: '에러 타입 필터',
+    enum: BugReportErrorType,
+    example: BugReportErrorType.TYPE_ERROR,
+  })
+  @IsEnum(BugReportErrorType)
+  @IsOptional()
+  errorType?: BugReportErrorType;
+
+  @ApiPropertyOptional({
+    description: '사용자 ID 필터',
+    example: 'user123',
+  })
+  @IsString()
+  @IsOptional()
+  userId?: string;
+
+  @ApiPropertyOptional({
+    description: '담당자 ID 필터',
+    example: 'admin123',
+  })
+  @IsString()
+  @IsOptional()
+  assigneeId?: string;
+
+  @ApiPropertyOptional({
+    description: '페이지 번호 (1부터 시작)',
+    example: 1,
+    default: 1,
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  page?: number;
+
+  @ApiPropertyOptional({
+    description: '페이지당 항목 수 (최대 100)',
+    example: 10,
+    default: 10,
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  limit?: number;
+
+  @ApiPropertyOptional({
+    description: '정렬 기준 필드',
+    example: 'createdAt',
+    default: 'createdAt',
+  })
+  @IsString()
+  @IsOptional()
+  sortBy?: string;
+
+  @ApiPropertyOptional({
+    description: '정렬 순서 (ASC 또는 DESC)',
+    example: 'DESC',
+    default: 'DESC',
+    enum: ['ASC', 'DESC'],
+  })
+  @IsString()
+  @IsOptional()
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+// 페이징 메타데이터
+export class PaginationMetaDto {
+  @ApiProperty({ description: '현재 페이지', example: 1 })
+  page: number;
+
+  @ApiProperty({ description: '페이지당 항목 수', example: 10 })
+  limit: number;
+
+  @ApiProperty({ description: '전체 항목 수', example: 100 })
+  total: number;
+
+  @ApiProperty({ description: '전체 페이지 수', example: 10 })
+  totalPages: number;
+
+  @ApiProperty({ description: '현재 페이지 항목 수', example: 10 })
+  itemCount: number;
+}
+
 // 버그 리포트 목록 조회 응답
 export class GetBugReportsResponseDto {
   @ApiProperty({ description: '요청 성공 여부', example: true })
@@ -243,6 +361,9 @@ export class GetBugReportsResponseDto {
 
   @ApiProperty({ type: [BugReportDataDto] })
   data: BugReportDataDto[];
+
+  @ApiProperty({ type: PaginationMetaDto, description: '페이징 정보' })
+  meta: PaginationMetaDto;
 }
 
 // 버그 리포트 생성 응답

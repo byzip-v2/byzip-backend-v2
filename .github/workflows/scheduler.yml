@@ -1,0 +1,55 @@
+name: Public Data Scheduler
+
+on:
+  schedule:
+    # 매일 오전 3시 (KST) 실행
+    # UTC 기준으로는 오전 3시 - 9시간 = 전날 18시 (6 PM UTC)
+    # 참고: GitHub Actions는 최대 1분의 지연이 발생할 수 있습니다
+    - cron: '0 18 * * *'
+  workflow_dispatch: # 수동 실행 가능
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  trigger-scheduler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 🔔 스케줄러 API 호출
+        run: |
+          API_URL="${{ secrets.SCHEDULER_API_URL || 'https://api.by-zip.com/api/scheduler/public-data' }}"
+          
+          echo "📡 스케줄러 API 호출 중..."
+          echo "URL: $API_URL"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X GET \
+            -H "Content-Type: application/json" \
+            "$API_URL")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          echo "📊 응답 코드: $HTTP_CODE"
+          echo "📄 응답 내용:"
+          echo "$BODY" | jq '.' || echo "$BODY"
+          
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "❌ 스케줄러 실행 실패 (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+          
+          # 응답에서 success 확인
+          SUCCESS=$(echo "$BODY" | jq -r '.success // false')
+          if [ "$SUCCESS" != "true" ]; then
+            echo "⚠️ 스케줄러 실행 중 오류 발생"
+            echo "$BODY" | jq '.results // []' || echo "결과를 확인할 수 없습니다"
+            exit 1
+          fi
+          
+          echo "✅ 스케줄러 실행 성공"
+          echo "$BODY" | jq '.results // []' || echo "결과를 확인할 수 없습니다"
+

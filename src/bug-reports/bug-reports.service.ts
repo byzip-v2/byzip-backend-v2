@@ -6,6 +6,7 @@ import {
   CreateBugReportResponseDto,
   DeleteBugReportResponseDto,
   GetBugReportResponseDto,
+  GetBugReportsQueryDto,
   GetBugReportsResponseDto,
   UpdateBugReportDto,
   UpdateBugReportResponseDto,
@@ -39,20 +40,85 @@ export class BugReportsService {
     };
   }
 
-  // 모든 버그 리포트 조회
-  async findAll(): Promise<GetBugReportsResponseDto> {
-    this.logger.log('모든 버그 리포트 조회');
+  // 모든 버그 리포트 조회 (검색, 필터링, 페이징 지원)
+  async findAll(
+    query: GetBugReportsQueryDto,
+  ): Promise<GetBugReportsResponseDto> {
+    this.logger.log(`버그 리포트 조회: ${JSON.stringify(query)}`);
 
-    const bugReports = await this.bugReportRepository.find({
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+    const sortBy = query.sortBy || 'createdAt';
+    const sortOrder = query.sortOrder || 'DESC';
+
+    // QueryBuilder 생성
+    const queryBuilder = this.bugReportRepository.createQueryBuilder('bugReport');
+
+    // 검색 기능 (제목, 설명, 에러 메시지에서 검색)
+    if (query.search) {
+      queryBuilder.andWhere(
+        '(bugReport.title ILIKE :search OR bugReport.description ILIKE :search OR bugReport.errorMessage ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+
+    // 필터링
+    if (query.status) {
+      queryBuilder.andWhere('bugReport.status = :status', {
+        status: query.status,
+      });
+    }
+
+    if (query.severity) {
+      queryBuilder.andWhere('bugReport.severity = :severity', {
+        severity: query.severity,
+      });
+    }
+
+    if (query.errorType) {
+      queryBuilder.andWhere('bugReport.errorType = :errorType', {
+        errorType: query.errorType,
+      });
+    }
+
+    if (query.userId) {
+      queryBuilder.andWhere('bugReport.userId = :userId', {
+        userId: query.userId,
+      });
+    }
+
+    if (query.assigneeId) {
+      queryBuilder.andWhere('bugReport.assigneeId = :assigneeId', {
+        assigneeId: query.assigneeId,
+      });
+    }
+
+    // 정렬
+    queryBuilder.orderBy(`bugReport.${sortBy}`, sortOrder);
+
+    // 전체 개수 조회 (필터링 적용)
+    const total = await queryBuilder.getCount();
+
+    // 페이징 적용
+    queryBuilder.skip(skip).take(limit);
+
+    // 데이터 조회
+    const bugReports = await queryBuilder.getMany();
+
+    const totalPages = Math.ceil(total / limit);
 
     return {
       success: true,
       message: '버그 리포트 목록을 성공적으로 조회했습니다.',
       data: bugReports,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        itemCount: bugReports.length,
+      },
     };
   }
 
@@ -75,7 +141,8 @@ export class BugReportsService {
     };
   }
 
-  // 특정 사용자의 버그 리포트 조회
+  // 특정 사용자의 버그 리포트 조회 (더 이상 사용되지 않음 - findAll로 통합)
+  // @deprecated findAll 메서드의 userId 파라미터를 사용하세요
   async findByUserId(userId: string): Promise<GetBugReportsResponseDto> {
     this.logger.log(`사용자별 버그 리포트 조회: userId=${userId}`);
 
@@ -90,6 +157,13 @@ export class BugReportsService {
       success: true,
       message: '사용자의 버그 리포트 목록을 성공적으로 조회했습니다.',
       data: bugReports,
+      meta: {
+        page: 1,
+        limit: bugReports.length,
+        total: bugReports.length,
+        totalPages: 1,
+        itemCount: bugReports.length,
+      },
     };
   }
 

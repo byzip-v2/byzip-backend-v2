@@ -49,9 +49,8 @@ export class AuthService {
 
     return this.jwtService.sign(payload, {
       secret: jwtSecret,
-      // 테스트용: Access Token: 1분, Refresh Token: 10분
-      // 프로덕션: Access Token: 1시간, Refresh Token: 30일
-      expiresIn: isRefreshToken ? '10m' : '1m',
+      // Access Token: 1시간, Refresh Token: 30일
+      expiresIn: isRefreshToken ? '30d' : '1h',
     });
   }
 
