@@ -57,41 +57,91 @@ export class PublicDataService {
 
       this.logger.log('공공데이터 API 호출 시작');
 
-      // TODO: 실제 API 엔드포인트로 변경 필요
-      // Swagger 문서에서 확인한 정확한 엔드포인트로 수정해야 합니다
-      const apiUrl = `${this.baseUrl}/ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancDetail?&serviceKey=${this.apiKey}&page=1&perPage=10&&cond%5BRCRIT_PBLANC_DE%3A%3AGTE%5D=2023-01-01`;
+      const aptUrl = `${this.baseUrl}/ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancDetail?&serviceKey=${this.apiKey}&page=1&perPage=10&&cond%5BRCRIT_PBLANC_DE%3A%3AGTE%5D=2023-01-01`;
+      const urbtyUrl = `${this.baseUrl}/ApplyhomeInfoDetailSvc/v1/getUrbtyOfctlLttotPblancDetail?&serviceKey=${this.apiKey}&page=1&perPage=10&&cond%5BRCRIT_PBLANC_DE%3A%3AGTE%5D=2023-01-01`;
 
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      let totalSavedCount = 0;
+      let totalGeocodingFailedCount = 0;
 
-      if (!response.ok) {
-        throw new Error(
-          `API 호출 실패: ${response.status} ${response.statusText}`,
+      // 1. APT 분양정보 API 호출
+      try {
+        this.logger.log('APT 분양정보 API 호출 중...');
+        const aptResponse = await fetch(aptUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!aptResponse.ok) {
+          throw new Error(
+            `APT API 호출 실패: ${aptResponse.status} ${aptResponse.statusText}`,
+          );
+        }
+
+        const aptData = await aptResponse.json();
+        this.logger.log(
+          `APT API 응답 받음: ${JSON.stringify(aptData).substring(0, 200)}...`,
         );
+
+        const { savedCount, geocodingFailedCount } =
+          await this.processAndSaveData(aptData);
+        totalSavedCount += savedCount;
+        totalGeocodingFailedCount += geocodingFailedCount;
+        this.logger.log(
+          `APT 데이터 저장 완료: ${savedCount}건, 지오코딩 실패: ${geocodingFailedCount}건`,
+        );
+      } catch (aptError) {
+        this.logger.error(
+          `APT API 호출 실패: ${aptError instanceof Error ? aptError.message : 'Unknown error'}`,
+        );
+        // APT API 실패해도 도시형 API는 계속 진행
       }
 
-      const data = await response.json();
-      this.logger.log(
-        `API 응답 받음: ${JSON.stringify(data).substring(0, 200)}...`,
-      );
+      // 2. 도시형/오피스텔 분양정보 API 호출
+      try {
+        this.logger.log('도시형/오피스텔 분양정보 API 호출 중...');
+        const urbtyResponse = await fetch(urbtyUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-      // 데이터 가공 및 저장
-      const { savedCount, geocodingFailedCount } =
-        await this.processAndSaveData(data);
+        if (!urbtyResponse.ok) {
+          throw new Error(
+            `도시형 API 호출 실패: ${urbtyResponse.status} ${urbtyResponse.statusText}`,
+          );
+        }
+
+        const urbtyData = await urbtyResponse.json();
+        this.logger.log(
+          `도시형 API 응답 받음: ${JSON.stringify(urbtyData).substring(0, 200)}...`,
+        );
+
+        const { savedCount, geocodingFailedCount } =
+          await this.processAndSaveData(urbtyData);
+        totalSavedCount += savedCount;
+        totalGeocodingFailedCount += geocodingFailedCount;
+        this.logger.log(
+          `도시형 데이터 저장 완료: ${savedCount}건, 지오코딩 실패: ${geocodingFailedCount}건`,
+        );
+      } catch (urbtyError) {
+        this.logger.error(
+          `도시형 API 호출 실패: ${urbtyError instanceof Error ? urbtyError.message : 'Unknown error'}`,
+        );
+        // 도시형 API 실패해도 전체 프로세스는 계속
+      }
 
       this.logger.log(
-        `데이터 저장 완료: ${savedCount}건, 지오코딩 실패: ${geocodingFailedCount}건`,
+        `전체 데이터 저장 완료: 총 ${totalSavedCount}건, 지오코딩 실패: ${totalGeocodingFailedCount}건`,
       );
 
       return {
         success: true,
         message: '공공데이터 수집 및 저장 완료',
-        savedCount,
-        geocodingFailedCount,
+        savedCount: totalSavedCount,
+        geocodingFailedCount: totalGeocodingFailedCount,
       };
     } catch (error) {
       this.logger.error(`공공데이터 수집 실패: ${error.message}`, error.stack);
@@ -144,27 +194,34 @@ export class PublicDataService {
             continue;
           }
 
+          // 기존 데이터 확인
           const existing = await this.housingSupplyRepository.findOne({
             where: { pblancNo },
           });
 
           const mappedData = this.mapApiDataToEntity(parsedItem);
 
-          // 주소가 있으면 지오코딩 수행
+          // 주소가 있으면 지오코딩 수행 (기존 데이터에 좌표가 없을 때만)
           const address =
             parsedItem.HSSPLY_ADRES ||
             parsedItem.hssplyAdres ||
             mappedData.hssplyAdres;
-          if (
+
+          // 기존 데이터에 좌표가 없거나, 새 데이터인 경우에만 지오코딩 시도
+          const needsGeocoding =
             address &&
             typeof address === 'string' &&
-            !mappedData.latitude &&
-            !mappedData.longitude
-          ) {
+            (!existing || !existing.latitude || !existing.longitude) &&
+            (!mappedData.latitude || !mappedData.longitude);
+
+          if (needsGeocoding) {
             const coordinates = await this.geocodeAddress(address);
             if (coordinates) {
               mappedData.latitude = coordinates.latitude;
               mappedData.longitude = coordinates.longitude;
+              this.logger.log(
+                `지오코딩 성공: ${address} -> (${coordinates.latitude}, ${coordinates.longitude})`,
+              );
             } else {
               // 지오코딩 실패
               geocodingFailedCount++;
@@ -174,21 +231,34 @@ export class PublicDataService {
             }
           }
 
+          // 데이터 업데이트 또는 추가
           if (existing) {
             // 기존 데이터 업데이트
-            Object.assign(existing, mappedData);
-            existing.rawData = parsedItem;
-            existing.collectedAt = new Date();
-            await this.housingSupplyRepository.save(existing);
+            // 기존 좌표가 있으면 유지, 없으면 새로 지오코딩한 좌표 사용
+            const updateData: Partial<HousingSupply> = {
+              ...mappedData,
+              rawData: parsedItem,
+              collectedAt: new Date(),
+            };
+
+            // 기존 좌표가 있으면 유지
+            if (existing.latitude && existing.longitude) {
+              updateData.latitude = existing.latitude;
+              updateData.longitude = existing.longitude;
+            }
+
+            await this.housingSupplyRepository.update(existing.id, updateData);
+            this.logger.debug(`데이터 업데이트: 공고번호 ${pblancNo}`);
             savedCount++;
           } else {
-            // 새 데이터 저장
+            // 새 데이터 추가
             const housingSupply = this.housingSupplyRepository.create({
               ...mappedData,
               rawData: parsedItem,
               collectedAt: new Date(),
             });
             await this.housingSupplyRepository.save(housingSupply);
+            this.logger.debug(`데이터 추가: 공고번호 ${pblancNo}`);
             savedCount++;
           }
         } catch (itemError) {
@@ -271,8 +341,18 @@ export class PublicDataService {
           ? Number(data.TOT_SUPLY_HSHLDCO)
           : undefined,
       rcritPblancDe: parseDate(data.RCRIT_PBLANC_DE || data.rcritPblancDe),
-      rceptBgnde: parseDate(data.RCEPT_BGNDE || data.rceptBgnde),
-      rceptEndde: parseDate(data.RCEPT_ENDDE || data.rceptEndde),
+      rceptBgnde: parseDate(
+        data.RCEPT_BGNDE ||
+          data.rceptBgnde ||
+          data.SUBSCRPT_RCEPT_BGNDE ||
+          data.subscrptRceptBgnde,
+      ),
+      rceptEndde: parseDate(
+        data.RCEPT_ENDDE ||
+          data.rceptEndde ||
+          data.SUBSCRPT_RCEPT_ENDDE ||
+          data.subscrptRceptEndde,
+      ),
       spsplyRceptBgnde: parseDate(
         data.SPSPLY_RCEPT_BGNDE || data.spsplyRceptBgnde,
       ),
