@@ -6,6 +6,10 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/byzip-v2/byzip-backend-v2.git"
+  },
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build"

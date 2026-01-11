@@ -380,6 +380,7 @@ export interface CreateBugReportDto {
   severity?: BugReportSeverity;
   userId?: string;
   assigneeId?: string;
+  memo?: string;
   metadata?: Record<string, any>;
 }
 
@@ -394,6 +395,7 @@ export interface UpdateBugReportDto {
   errorType?: BugReportErrorType;
   errorCode?: string;
   assigneeId?: string;
+  memo?: string;
   metadata?: Record<string, any>;
 }
 
@@ -412,6 +414,7 @@ export interface BugReportDataDto {
   severity: BugReportSeverity;
   userId?: string;
   assigneeId?: string;
+  memo?: string;
   metadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;

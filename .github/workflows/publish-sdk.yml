@@ -9,10 +9,14 @@ on:
       - 'src/types/**'
       - 'scripts/extract-types.js'
       - 'sdk-package/**'
+  workflow_dispatch: # 수동 실행 가능
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Trusted Publishing을 위한 OIDC 토큰 발급 권한
 
     steps:
       - name: 📥 Checkout 코드
@@ -73,12 +77,10 @@ jobs:
 
       - name: 🚀 NPM에 배포
         working-directory: ./sdk-package
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
 
       - name: ✅ 배포 완료 알림
         run: |
           echo "🎉 SDK 버전 ${{ steps.version.outputs.version }} 배포 완료!"
-          echo "📦 패키지: @byzip/types"
-          echo "🔗 https://www.npmjs.com/package/@byzip/types"
+          echo "📦 패키지: byzip-v2-sdk"
+          echo "🔗 https://www.npmjs.com/package/byzip-v2-sdk"
