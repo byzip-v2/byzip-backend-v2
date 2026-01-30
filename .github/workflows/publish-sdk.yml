@@ -5,10 +5,11 @@ on:
     branches:
       - main
       - dev
-    paths:
-      - 'src/types/**'
-      - 'scripts/extract-types.js'
-      - 'sdk-package/**'
+    # paths 없으면 dev/main 푸시 시마다 실행됨. SDK 관련만 실행하려면 아래 주석 해제
+    # paths:
+    #   - 'src/types/**'
+    #   - 'scripts/extract-types.js'
+    #   - 'sdk-package/**'
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
@@ -26,7 +27,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          # registry-url 제거: Trusted Publishing(OIDC) 사용 시 토큰 기반 인증이 설정되면 충돌함
+
+      - name: 📌 npm 11+ 설치 (OIDC Trusted Publishing 필요)
+        run: npm install -g npm@11
 
       - name: 🔍 타입 파일 추출
         run: node scripts/extract-types.js
