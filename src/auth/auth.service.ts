@@ -61,9 +61,9 @@ export class AuthService {
 
     // Refresh Token을 DB에 저장
     const expiresAt = new Date();
-    // 테스트용: 10분 후
+    // 테스트용: 10분 후 expiresAt.setMinutes(expiresAt.getMinutes() + 10);
     // 프로덕션: 30일 후 - expiresAt.setDate(expiresAt.getDate() + 30);
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+    expiresAt.setDate(expiresAt.getDate() + 30);
 
     await this.refreshTokenRepository.save({
       userId: user.userId,
@@ -277,9 +277,9 @@ export class AuthService {
 
       // 6. 새로운 Refresh Token을 DB에 저장하고 기존 토큰 삭제
       const expiresAt = new Date();
-      // 테스트용: 10분 후
+      // 테스트용: 10분 후 expiresAt.setMinutes(expiresAt.getMinutes() + 10);
       // 프로덕션: 30일 후 - expiresAt.setDate(expiresAt.getDate() + 30);
-      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+      expiresAt.setDate(expiresAt.getDate() + 30);
 
       await this.refreshTokenRepository.delete({ id: storedToken.id });
       await this.refreshTokenRepository.save({
