@@ -6,7 +6,6 @@
 export * from './auth.const';
 export * from './auth.dto';
 export * from './bug-report.dto';
-export * from './housing-supply.dto';
 export * from './jwt.types';
 export * from './response.dto';
 export * from './response.helpers';

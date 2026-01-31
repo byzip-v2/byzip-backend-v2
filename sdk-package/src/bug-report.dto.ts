@@ -88,6 +88,23 @@ export interface GetBugReportsResponseDto {
   success: boolean;
   message: string;
   data: BugReportDataDto[];
+  meta: PaginationMetaDto;
+}
+
+export interface BugReportStatusCounts {
+  open: number;
+  in_progress: number;
+  resolved: number;
+  closed: number;
+}
+
+export interface PaginationMetaDto {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  itemCount: number;
+  statusCounts: BugReportStatusCounts;
 }
 
 // 버그 리포트 생성 응답

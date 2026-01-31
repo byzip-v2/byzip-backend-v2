@@ -11,7 +11,7 @@ import {
   UpdateBugReportDto,
   UpdateBugReportResponseDto,
 } from '../types/dto/bug-report/bug-report.dto';
-import { BugReport } from './entities/bug-report.entity';
+import { BugReport, BugReportStatus } from './entities/bug-report.entity';
 
 @Injectable()
 export class BugReportsService {
@@ -53,58 +53,79 @@ export class BugReportsService {
     const sortOrder = query.sortOrder || 'DESC';
 
     // QueryBuilder 생성
-    const queryBuilder = this.bugReportRepository.createQueryBuilder('bugReport');
+    const baseQueryBuilder =
+      this.bugReportRepository.createQueryBuilder('bugReport');
 
     // 검색 기능 (제목, 설명, 에러 메시지에서 검색)
     if (query.search) {
-      queryBuilder.andWhere(
+      baseQueryBuilder.andWhere(
         '(bugReport.title ILIKE :search OR bugReport.description ILIKE :search OR bugReport.errorMessage ILIKE :search)',
         { search: `%${query.search}%` },
       );
     }
 
     // 필터링
-    if (query.status) {
-      queryBuilder.andWhere('bugReport.status = :status', {
-        status: query.status,
-      });
-    }
-
     if (query.severity) {
-      queryBuilder.andWhere('bugReport.severity = :severity', {
+      baseQueryBuilder.andWhere('bugReport.severity = :severity', {
         severity: query.severity,
       });
     }
 
     if (query.errorType) {
-      queryBuilder.andWhere('bugReport.errorType = :errorType', {
+      baseQueryBuilder.andWhere('bugReport.errorType = :errorType', {
         errorType: query.errorType,
       });
     }
 
     if (query.userId) {
-      queryBuilder.andWhere('bugReport.userId = :userId', {
+      baseQueryBuilder.andWhere('bugReport.userId = :userId', {
         userId: query.userId,
       });
     }
 
     if (query.assigneeId) {
-      queryBuilder.andWhere('bugReport.assigneeId = :assigneeId', {
+      baseQueryBuilder.andWhere('bugReport.assigneeId = :assigneeId', {
         assigneeId: query.assigneeId,
       });
     }
 
+    const listQueryBuilder = baseQueryBuilder.clone();
+
+    if (query.status) {
+      listQueryBuilder.andWhere('bugReport.status = :status', {
+        status: query.status,
+      });
+    }
+
     // 정렬
-    queryBuilder.orderBy(`bugReport.${sortBy}`, sortOrder);
+    listQueryBuilder.orderBy(`bugReport.${sortBy}`, sortOrder);
 
     // 전체 개수 조회 (필터링 적용)
-    const total = await queryBuilder.getCount();
+    const total = await listQueryBuilder.getCount();
 
     // 페이징 적용
-    queryBuilder.skip(skip).take(limit);
+    listQueryBuilder.skip(skip).take(limit);
 
     // 데이터 조회
-    const bugReports = await queryBuilder.getMany();
+    const bugReports = await listQueryBuilder.getMany();
+
+    const statusCountsRaw = await baseQueryBuilder
+      .clone()
+      .select('bugReport.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('bugReport.status')
+      .getRawMany<{ status: BugReportStatus; count: string }>();
+
+    const statusCounts: Record<BugReportStatus, number> = {
+      [BugReportStatus.OPEN]: 0,
+      [BugReportStatus.IN_PROGRESS]: 0,
+      [BugReportStatus.RESOLVED]: 0,
+      [BugReportStatus.CLOSED]: 0,
+    };
+
+    for (const row of statusCountsRaw) {
+      statusCounts[row.status] = Number(row.count);
+    }
 
     const totalPages = Math.ceil(total / limit);
 
@@ -118,6 +139,7 @@ export class BugReportsService {
         total,
         totalPages,
         itemCount: bugReports.length,
+        statusCounts,
       },
     };
   }
@@ -163,6 +185,20 @@ export class BugReportsService {
         total: bugReports.length,
         totalPages: 1,
         itemCount: bugReports.length,
+        statusCounts: {
+          [BugReportStatus.OPEN]: bugReports.filter(
+            (report) => report.status === BugReportStatus.OPEN,
+          ).length,
+          [BugReportStatus.IN_PROGRESS]: bugReports.filter(
+            (report) => report.status === BugReportStatus.IN_PROGRESS,
+          ).length,
+          [BugReportStatus.RESOLVED]: bugReports.filter(
+            (report) => report.status === BugReportStatus.RESOLVED,
+          ).length,
+          [BugReportStatus.CLOSED]: bugReports.filter(
+            (report) => report.status === BugReportStatus.CLOSED,
+          ).length,
+        },
       },
     };
   }

@@ -365,6 +365,12 @@ export class PaginationMetaDto {
 
   @ApiProperty({ description: '현재 페이지 항목 수', example: 10 })
   itemCount: number;
+
+  @ApiProperty({
+    description: '상태별 버그 리포트 개수',
+    example: { open: 12, in_progress: 3, resolved: 7, closed: 1 },
+  })
+  statusCounts: Record<BugReportStatus, number>;
 }
 
 // 버그 리포트 목록 조회 응답
