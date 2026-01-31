@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsInt,
@@ -10,6 +11,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 // 주택 공급 정보 생성 요청 DTO (스케줄러에서만 사용, 일반 사용자는 생성 불가)
 export class CreateHousingSupplyDto {
@@ -369,6 +371,18 @@ export class GetHousingSuppliesQueryDto {
   @IsString()
   @IsOptional()
   specltRdnEarthAt?: string;
+
+  @ApiPropertyOptional({
+    description:
+      '숨김 목록 포함 여부 (true: 숨김 항목 포함, 미지정/false: 숨김 항목 제외)',
+    example: false,
+  })
+  @Transform(({ value }) =>
+    value === 'true' || value === true ? true : value === 'false' || value === false ? false : undefined,
+  )
+  @IsBoolean()
+  @IsOptional()
+  isHidden?: boolean;
 
   @ApiPropertyOptional({
     description: '페이지 번호 (1부터 시작)',

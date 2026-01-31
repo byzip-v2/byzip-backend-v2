@@ -140,6 +140,13 @@ export class HousingSuppliesController {
     type: String,
   })
   @ApiQuery({
+    name: 'isHidden',
+    required: false,
+    description:
+      '숨김 목록 포함 여부 (true: 숨김 항목 포함, 미지정/false: 숨김 항목 제외)',
+    type: Boolean,
+  })
+  @ApiQuery({
     name: 'page',
     required: false,
     description: '페이지 번호',
@@ -256,6 +263,13 @@ export class HousingSuppliesController {
     required: false,
     description: '투기과열지구 필터 (Y/N)',
     type: String,
+  })
+  @ApiQuery({
+    name: 'isHidden',
+    required: false,
+    description:
+      '숨김 목록 포함 여부 (true: 숨김 항목 포함, 미지정/false: 숨김 항목 제외)',
+    type: Boolean,
   })
   @ApiQuery({
     name: 'page',

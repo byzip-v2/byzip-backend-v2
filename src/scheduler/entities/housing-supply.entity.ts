@@ -181,6 +181,10 @@ export class HousingSupply {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   collectedAt: Date;
 
+  // 숨김 여부 (목록에서 숨김 처리)
+  @Column({ name: 'is_hidden', type: 'boolean', default: false })
+  isHidden: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

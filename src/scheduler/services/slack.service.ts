@@ -93,7 +93,7 @@ export class SlackService {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `<https://byzip-frontend-v2-git-dev-heereal.vercel.app/admin/geo|📍 지오코딩 관리 페이지로 이동>`,
+          text: `<https://dev.by-zip.com/admin/geo|📍 지오코딩 관리 페이지로 이동>`,
         },
       });
 

@@ -144,6 +144,13 @@ export class HousingSuppliesService {
       );
     }
 
+    // 숨김 여부 필터 (isHidden: true일 때만 숨김 목록 포함, 기본값은 숨김 제외)
+    if (query.isHidden !== true) {
+      queryBuilder.andWhere('housingSupply.isHidden = :isHidden', {
+        isHidden: false,
+      });
+    }
+
     // 정렬
     queryBuilder.orderBy(`housingSupply.${sortBy}`, sortOrder);
 
@@ -350,6 +357,13 @@ export class HousingSuppliesService {
           specltRdnEarthAt: query.specltRdnEarthAt,
         },
       );
+    }
+
+    // 숨김 여부 필터 (isHidden: true일 때만 숨김 목록 포함, 기본값은 숨김 제외)
+    if (query.isHidden !== true) {
+      queryBuilder.andWhere('housingSupply.isHidden = :isHidden', {
+        isHidden: false,
+      });
     }
 
     // 정렬
