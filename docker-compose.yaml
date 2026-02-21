@@ -1,10 +1,21 @@
 services:
+  nginx:
+    container_name: byzip-nginx
+    image: nginx:alpine
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - byzip-network
+
   app:
     container_name: byzip-be-app
     build: .
     restart: always
-    ports:
-      - 3000:3000
     depends_on:
       postgres:
         condition: service_healthy
@@ -13,13 +24,13 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/byzip
       NODE_ENV: production
+    networks:
+      - byzip-network
 
   postgres:
     container_name: byzip-be-postgres
     image: postgres:15
     restart: always
-    ports:
-      - 5432:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -31,3 +42,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - byzip-network
+
+networks:
+  byzip-network:
+    name: byzip-network
+    driver: bridge

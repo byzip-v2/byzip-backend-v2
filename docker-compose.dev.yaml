@@ -3,8 +3,6 @@ services:
     container_name: byzip-be-dev-app
     build: .
     restart: always
-    ports:
-      - 3001:3000
     depends_on:
       postgres:
         condition: service_healthy
@@ -13,13 +11,13 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/byzip_dev
       NODE_ENV: development
+    networks:
+      - byzip-network
 
   postgres:
     container_name: byzip-be-dev-postgres
     image: postgres:15
     restart: always
-    ports:
-      - 5433:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -31,3 +29,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - byzip-network
+
+networks:
+  byzip-network:
+    external: true
