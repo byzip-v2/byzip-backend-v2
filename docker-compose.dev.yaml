@@ -1,31 +1,31 @@
 services:
   app:
-    container_name: byzip-be-app
+    container_name: byzip-be-dev-app
     build: .
     restart: always
     ports:
-      - 3000:3000
+      - 3001:3000
     depends_on:
       postgres:
         condition: service_healthy
     env_file:
-      - .env.production
+      - .env.staging
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/byzip
-      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/byzip_dev
+      NODE_ENV: development
 
   postgres:
-    container_name: byzip-be-postgres
+    container_name: byzip-be-dev-postgres
     image: postgres:15
     restart: always
     ports:
-      - 5432:5432
+      - 5433:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: byzip
+      POSTGRES_DB: byzip_dev
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - ./postgres-data-dev:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

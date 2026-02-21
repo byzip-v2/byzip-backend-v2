@@ -1,0 +1,8 @@
+node_modules
+dist
+postgres-data
+.env*
+.git
+.DS_Store
+coverage
+.omc

@@ -16,13 +16,6 @@ import { UsersModel } from '../users/entities/users.entity';
         entities: [UsersModel, RefreshToken, BugReport, HousingSupply],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
-        ssl: {
-          rejectUnauthorized: false, // Neon에서 필요한 SSL 설정
-        },
-        // Neon 서버리스 최적화 설정
-        extra: {
-          connectionLimit: 1, // 서버리스 환경에서 연결 수 제한
-        },
       }),
       inject: [ConfigService],
     }),
