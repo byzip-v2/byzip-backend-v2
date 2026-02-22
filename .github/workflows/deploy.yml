@@ -1,0 +1,43 @@
+name: Deploy to Home Server
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 🔗 Tailscale 연결
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: 🚀 실서버 배포 (main)
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOME_SERVER_IP }}
+          username: ${{ secrets.HOME_SERVER_USER }}
+          key: ${{ secrets.HOME_SERVER_SSH_KEY }}
+          script: |
+            cd ~/byzip-backend-v2
+            git pull origin main
+            docker compose up -d --build
+
+      - name: 🧪 개발서버 배포 (dev)
+        if: github.ref == 'refs/heads/dev'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOME_SERVER_IP }}
+          username: ${{ secrets.HOME_SERVER_USER }}
+          key: ${{ secrets.HOME_SERVER_SSH_KEY }}
+          script: |
+            cd ~/byzip-backend-v2
+            git pull origin dev
+            docker compose -f docker-compose.dev.yaml -p byzip-dev up -d --build
